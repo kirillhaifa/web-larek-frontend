@@ -1,15 +1,22 @@
 import { eventEmitter } from '..';
-import { ICustomer, IForm } from '../types';
+import {
+	IBascket,
+	IOrder,
+	IFormAddress,
+	IFormContacts,
+	IApi,
+} from '../types';
 import { Form } from './base/form';
 
-export class FormAdress extends Form {
+//форма адреса и способа оплаты
+export class FormAdress extends Form implements IFormAddress {
 	protected _adressInput: HTMLInputElement;
 	buttonsAlt: NodeListOf<HTMLButtonElement>;
-	customer: ICustomer
+	order: IOrder;
 
-	constructor(form: HTMLFormElement, customer: ICustomer) {
+	constructor(form: HTMLFormElement, order: IOrder) {
 		super(form);
-		this.customer = customer
+		this.order = order;
 		this.buttonsAlt = this._form.querySelectorAll(
 			'.button_alt'
 		) as NodeListOf<HTMLButtonElement>;
@@ -22,7 +29,9 @@ export class FormAdress extends Form {
 			button.addEventListener('click', this.buttonAltHandler.bind(this));
 		});
 
-		this._submitButton.addEventListener('click', (event) => this.submitHandler(event, customer));
+		this._submitButton.addEventListener('click', (event) =>
+			this.submitHandler(event, order)
+		);
 	}
 
 	buttonAltHandler() {
@@ -30,11 +39,11 @@ export class FormAdress extends Form {
 		this.validate().controlSubmitButton();
 	}
 
-	submitHandler(event: MouseEvent, customer: ICustomer) {
+	submitHandler(event: MouseEvent, order: IOrder) {
 		event.preventDefault();
 		eventEmitter.emit('modalContacts:open');
-		customer.setPaymentMethod(`${this.returnChoosenValue(this.buttonsAlt)}`);
-		customer.setAddress(this._adressInput.value);
+		order.setPaymentMethod(`${this.returnChoosenValue(this.buttonsAlt)}`);
+		order.setAddress(this._adressInput.value);
 	}
 
 	//кнопки вsбора способа оплаты сделаны не радиокнопками, а обычными кнопками.
@@ -62,6 +71,7 @@ export class FormAdress extends Form {
 		});
 	}
 
+	//возращает способ оплаты, берет его из кнопок
 	private returnChoosenValue(
 		buttons: NodeListOf<HTMLButtonElement>
 	): string | null {
@@ -92,52 +102,88 @@ export class FormAdress extends Form {
 	}
 }
 
-export class FormContacts extends Form {
-	protected _emailInput: HTMLInputElement;
-	protected _phoneInput: HTMLInputElement;
-	protected _submitButton: HTMLButtonElement;
+//форма заполнения контактов
+export class FormContacts extends Form implements IFormContacts {
+	emailInput: HTMLInputElement;
+	phoneInput: HTMLInputElement;
+	submitButton: HTMLButtonElement;
+	order: IOrder;
+	bascket: IBascket;
 
-	constructor(form: HTMLFormElement, customer: ICustomer) {
+	constructor(form: HTMLFormElement, order: IOrder, bascket: IBascket, api: IApi) {
 		super(form);
-		this._emailInput = this._form.querySelector(
+		this.order = order;
+		this.bascket = bascket;
+		this.emailInput = this._form.querySelector(
 			'input[name="email"]'
 		) as HTMLInputElement;
-		this._emailInput.addEventListener('input', () => {
-			this.validate().renderError().controlSubmitButton();
-		});
-		this._phoneInput = this._form.querySelector(
+		this.emailInput.addEventListener(
+			'input',
+			this.emeilInputHandler.bind(this)
+		);
+
+		this.phoneInput = this._form.querySelector(
 			'input[name="phone"]'
 		) as HTMLInputElement;
-		this._phoneInput.addEventListener('input', () => {
-			//если пользователь вводит 8 в начале, автоматически меняется на +7
-			if (this._phoneInput.value === '8') {
-				this._phoneInput.value = '+7';
-			}
-			this.validate().renderError().controlSubmitButton();
-		});
-		this._submitButton.addEventListener('click', (event) => {
-			event.preventDefault();
-			eventEmitter.emit('finalModal:open');
-			customer.setEmail(this._emailInput.value);
-			customer.setPhoneNumber(this._phoneInput.value);
-			console.log(customer);
-		});
+		this.phoneInput.addEventListener(
+			'input',
+			this.phoneInputHandler.bind(this)
+		);
+
+		this._submitButton.addEventListener('click', (event) =>
+			this.submitHandler(event, order, api)
+		);
 	}
 
-	
+	emeilInputHandler() {
+		this.validate().renderError().controlSubmitButton();
+	}
+
+	phoneInputHandler() {
+		//если пользователь вводит 8 в начале, автоматически меняется на +7
+		if (this.phoneInput.value === '8') {
+			this.phoneInput.value = '+7';
+		}
+		this.validate().renderError().controlSubmitButton();
+	}
+
+	//при этом происходит сразу много всего, очистка корзины, api/post
+	submitHandler(event: MouseEvent, order: IOrder, api: IApi) {
+		event.preventDefault();
+		const payedPrice = this.bascket.countTotalprice();
+		order.setLastOrderPrice(payedPrice)
+		this.bascket.removeAllProducts();
+		eventEmitter.emit('bascket:changed');
+		eventEmitter.emit('finalModal:open');
+		order.setEmail(this.emailInput.value);
+		order.setPhoneNumber(this.phoneInput.value);
+		this.postOrder(order, api)
+	}
+
+private postOrder(order: IOrder, api: IApi) {
+	api.post('/order', order)
+	.then((response: { id: string, total: number }) => {
+			// Обработка успешного ответа
+			console.log('Order created successfully:', response);
+	})
+	.catch((error: any) => {
+			console.error('Error creating order:', error);
+	});
+}
+
 
 	renderError() {
 		const errorMessage = this._form.querySelector('.form__errors');
 		let message = '';
 
 		switch (true) {
-			case !this._emailInput.validity.valid && !this._phoneInput.validity.valid:
+			case !this.emailInput.validity.valid && !this.phoneInput.validity.valid:
 				message = 'Введите корректный номер телефона и адрес электронной почты';
 				break;
-			case !this._emailInput.validity.valid:
+			case !this.emailInput.validity.valid:
 				message = 'Введите корректный адрес электронной почты';
 				break;
-			case !this._phoneInput.validity.valid:
+			case !this.phoneInput.validity.valid:
 				message = 'Введите корректный номер телефона';
 				break;
 			default:

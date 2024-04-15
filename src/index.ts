@@ -1,9 +1,9 @@
 import './scss/styles.scss';
-import { Api, ApiListResponse } from './components/base/api';
-import { CDN_URL, API_URL } from './utils/constants';
-import { Product, ProductListResponse, IProductModel } from './types';
+import { Api } from './components/base/api';
+import { API_URL } from './utils/constants';
+import { ProductListResponse, IProductModel } from './types';
 import { CardTemplate, ProductCard } from './components/card';
-import { Bascket, ProductModel, ProductsListModel, Customer} from './components/model';
+import { Bascket, ProductsListModel, Order } from './components/model';
 import { EventEmitter } from './components/base/events';
 import {
 	ModalProduct,
@@ -13,17 +13,23 @@ import {
 	FinalModal,
 } from './components/modal';
 
+// Кэширование элементов DOM
+export const bascketButton = document.querySelector('.header__basket');
+export const bascketCounter = bascketButton.querySelector('.header__basket-counter');
+export const gallery = document.querySelector('.gallery') as HTMLElement;
+export const modalContainer = document.querySelector('#modal-container') as HTMLElement;
+
+// Инициализация объектов
 export const api = new Api(API_URL);
 export const eventEmitter = new EventEmitter();
 export const bascket = new Bascket();
-export const customer = new Customer()
+export const order = new Order();
 
+//получаем список продуктов 
 api
 	.get('/product')
 	.then((response: ProductListResponse) => {
 		const productList = new ProductsListModel(response.items);
-		const gallery = document.querySelector('.gallery') as HTMLElement;
-		console.log(productList);
 		productList.getProductList().forEach((product: IProductModel) => {
 			const cardTemplate = new CardTemplate();
 			const template = cardTemplate.getTemplate('card-catalog');
@@ -33,24 +39,22 @@ api
 	})
 	.catch((error: any) => {
 		console.error('Error:', error);
+		console.log('не работает ларёк, потому что Рагнарёк')
 	});
 
+//открытие модального окна продукта
 eventEmitter.on('productModal:open', (data: { product: IProductModel }) => {
-	const modal = document.querySelector('#modal-container') as HTMLElement;
 	const contentTemplate = document.querySelector(
 		'#card-preview'
 	) as HTMLTemplateElement;
 	const content = contentTemplate.content.cloneNode(true) as HTMLElement;
 
-	const modalProduct = new ModalProduct(modal, content, data.product, bascket);
+	const modalProduct = new ModalProduct(modalContainer, content, data.product, bascket);
 	modalProduct.render().controlButton().open();
 });
 
-const bascketButton = document.querySelector('.header__basket');
-const bascketCounter = bascketButton.querySelector('.header__basket-counter');
-
+//открытие модального окна корзины
 eventEmitter.on('bascketModal:open', () => {
-	const modal = document.querySelector('#modal-container') as HTMLElement;
 	const bascketTemplate = document.querySelector(
 		'#basket'
 	) as HTMLTemplateElement;
@@ -62,78 +66,83 @@ eventEmitter.on('bascketModal:open', () => {
 	) as HTMLTemplateElement;
 
 	const modalBascket = new ModalBasket(
-		modal,
+		modalContainer,
 		bascketContentTemplate,
-		cardBascketTemplate
+		cardBascketTemplate,
+		order
 	);
 
 	modalBascket.render(bascket).validateBascket(bascket).open();
 });
 
+//обработка изменений в коризне
 eventEmitter.on('bascket:changed', () => {
 	const currentNumber = bascket.countAmmount();
 	bascketCounter.textContent = currentNumber.toString();
-	const modal = document.querySelector('#modal-container') as HTMLElement;
-	const bascketTemplate = document.querySelector(
-		'#basket'
-	) as HTMLTemplateElement;
-	const bascketContentTemplate = bascketTemplate.content.cloneNode(
-		true
-	) as HTMLElement;
-	const cardBascketTemplate = document.querySelector(
-		'#card-basket'
-	) as HTMLTemplateElement;
-
-	const modalBascket = new ModalBasket(
-		modal,
-		bascketContentTemplate,
-		cardBascketTemplate
-	);
-	//проверяем открыто ли окно корзины,
-	//если открыто то при изменении в корзине перерисовываем список
-	const openModal = document.querySelector('.modal_active');
-	const bascketContent = openModal.querySelector('.basket');
+	const bascketContent = modalContainer.querySelector('.modal_active .basket');
 	if (bascketContent) {
+		const bascketTemplate = document.querySelector(
+			'#basket'
+		) as HTMLTemplateElement;
+		const bascketContentTemplate = bascketTemplate.content.cloneNode(
+			true
+		) as HTMLElement;
+		const cardBascketTemplate = document.querySelector(
+			'#card-basket'
+		) as HTMLTemplateElement;
+
+		const modalBascket = new ModalBasket(
+			modalContainer,
+			bascketContentTemplate,
+			cardBascketTemplate,
+			order
+		);
 		modalBascket.render(bascket).validateBascket(bascket).open();
 	}
 });
 
+//слушатель для кнопки корзины
 bascketButton.addEventListener('click', () => {
 	eventEmitter.emit('bascketModal:open');
 });
 
+//переход от коризны к оформлению заказа
 eventEmitter.on('bascket:checkout', () => {
-	const modal = document.querySelector('#modal-container') as HTMLElement;
 	const addressTemplate = document.querySelector(
 		'#order'
 	) as HTMLTemplateElement;
 	const addressTemplateContent = addressTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
-	const addressModal = new AddressModal(modal, addressTemplateContent, customer);
+	const addressModal = new AddressModal(modalContainer, addressTemplateContent, order);
 	addressModal.open();
 });
 
+//открытие модального окна заполнения контактов
 eventEmitter.on('modalContacts:open', () => {
-	const modal = document.querySelector('#modal-container') as HTMLElement;
 	const contactsTemplate = document.querySelector(
 		'#contacts'
 	) as HTMLTemplateElement;
 	const contactsTemplateContent = contactsTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
-	const modalContacts = new ModalContacts(modal, contactsTemplateContent, customer);
+	const modalContacts = new ModalContacts(
+		modalContainer,
+		contactsTemplateContent,
+		order,
+		api
+	);
 	modalContacts.open();
 });
 
+//открытие модального окна завершения заказа
 eventEmitter.on('finalModal:open', () => {
-	const modal = document.querySelector('#modal-container') as HTMLElement;
 	const finalTemplate = document.querySelector(
 		'#success'
 	) as HTMLTemplateElement;
 	const finalTemplateContent = finalTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
-	const finalContacts = new FinalModal(modal, finalTemplateContent);
-	finalContacts.render(bascket).open();
+	const finalContacts = new FinalModal(modalContainer, finalTemplateContent);
+	finalContacts.render().open();
 });

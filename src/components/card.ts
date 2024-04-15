@@ -1,9 +1,6 @@
-import { Product, ProductListResponse } from '../types';
-import { CDN_URL, API_URL } from '../utils/constants';
+import { CDN_URL } from '../utils/constants';
 import { IProductModel, ICardTemplate, IProductCard } from '../types/index';
-import { ModalProduct } from './modal';
-import { EventEmitter } from './base/events';
-import { bascket, eventEmitter } from '../index';
+import { eventEmitter } from '../index';
 
 
 // Поиск и копирование тимплейта карточки

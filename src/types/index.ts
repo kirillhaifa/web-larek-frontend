@@ -1,4 +1,4 @@
-import { Api, ApiListResponse } from '../components/base/api';
+import { Api, ApiListResponse, ApiPostMethods } from '../components/base/api';
 
 // типизация товара
 export type Product = {
@@ -16,6 +16,7 @@ export type ProductListResponse = ApiListResponse<Product>;
 //типизация модели товара
 export interface IProductModel {
   getProduct(): Product;
+  getProductId(): string
 }
 
 //типизация модели спискаа товаров 
@@ -33,27 +34,70 @@ export interface IProductCard {
   renderCard(container: HTMLElement): HTMLElement;
 }
 
+//типизация базового модального окна
 export interface IModal {
   open(): void;
   close(): void;
 }
 
+//типизация корзины
 export interface IBascket {
   getOrdersList(): IProductModel[]
   addProduct(product: IProductModel): void
+  removeAllProducts(): void
   removeProduct(product: IProductModel): void
   countTotalprice(): number
 }
 
-export interface ICustomer {
+//типизация заказа
+export interface IOrder {
+  payment: string,
+  email: string,
+  phone: string,
+  address: string,
+  total: number,
+  items: string[] 
+
 	setPaymentMethod(paymentMethod: string): void;
 	setAddress(address: string): void;
 	setEmail(email: string): void;
 	setPhoneNumber(phoneNumber: string): void;
+  setLastOrderPrice(lastOrderPrice: number): void
+  getLastOrderPrice(): number
 }
 
+//типизация базовой формы
 export interface IForm {
   valid: boolean;
   validate(): this;
   controlSubmitButton(): this;
 }
+
+//типизация формы адреса
+export interface IFormAddress extends IForm {
+  buttonsAlt: NodeListOf<HTMLButtonElement>;
+  order: IOrder;
+
+  buttonAltHandler(): void;
+  submitHandler(event: MouseEvent, order: IOrder): void;
+  validate(): this;
+}
+
+export interface IFormContacts extends IForm {
+  emailInput: HTMLInputElement;
+  phoneInput: HTMLInputElement;
+  submitButton: HTMLButtonElement;
+  order: IOrder;
+
+  emeilInputHandler(): void;
+  phoneInputHandler(): void;
+  submitHandler(event: MouseEvent, order: IOrder, api: IApi): void;
+  renderError(): this;
+}
+
+export interface IApi {
+  readonly baseUrl: string;
+  get(uri: string): Promise<object>;
+  post(uri: string, data: object, method?: ApiPostMethods): Promise<object>;
+}
+

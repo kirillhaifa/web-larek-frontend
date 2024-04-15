@@ -1,66 +1,17 @@
 import {
 	IBascket,
-	ICustomer,
-	IForm,
-	IModal,
-	IProductCard,
+	IOrder,
+	IFormContacts,
 	IProductModel,
 	Product,
+	IApi,
 } from '../types';
-import { ensureAllElements, ensureElement } from '../utils/utils';
-import { IEvents } from './base/events';
 import { CDN_URL } from '../utils/constants';
-import { Bascket, ProductModel, ProductsListModel } from './model';
-import { bascket, eventEmitter } from '../index';
+import { bascket, order, eventEmitter } from '../index';
 import { FormAdress, FormContacts } from './form';
+import { Modal } from './base/modal';
 
-// Определение базового класса Modal
-export class Modal implements IModal {
-	protected _closeButton: HTMLButtonElement;
-	protected _content: HTMLElement;
-	protected _modalTemplate: HTMLElement;
-	protected _contentContainer: HTMLElement;
-
-	constructor(template: HTMLElement) {
-		this._modalTemplate = template;
-		this._contentContainer =
-			this._modalTemplate.querySelector('.modal__content');
-		this._closeButton = ensureElement<HTMLButtonElement>(
-			'.modal__close',
-			this._modalTemplate
-		);
-		this._content = ensureElement<HTMLElement>(
-			'.modal__content',
-			this._modalTemplate
-		);
-		this._closeButton.addEventListener('click', this.close.bind(this));
-		this._modalTemplate.addEventListener('click', this.close.bind(this));
-		this._content.addEventListener('click', (event) => event.stopPropagation());
-	}
-
-	open() {
-		this._contentContainer.innerHTML = '';
-		this._modalTemplate.classList.add('modal_active');
-		this._modalTemplate.style.top = window.scrollY + 'px';
-		document.body.style.overflow = 'hidden';
-		return this;
-	}
-
-	close() {
-		// Удаляем слушатели событий
-		this._closeButton.removeEventListener('click', this.close.bind(this));
-		this._modalTemplate.removeEventListener('click', this.close.bind(this));
-		this._content.removeEventListener('click', (event) =>
-			event.stopPropagation()
-		);
-		this._modalTemplate.classList.remove('modal_active');
-
-		document.body.style.overflow = '';
-		return this;
-	}
-}
-
-// Определение класса ModalProduct, наследующего от Modal
+// Модальное окно продукта
 export class ModalProduct extends Modal {
 	protected _modalContent: HTMLElement;
 	protected _product: IProductModel;
@@ -163,6 +114,7 @@ export class ModalProduct extends Modal {
 	}
 }
 
+//модальное окно корзины
 export class ModalBasket extends Modal {
 	protected _basketTemplate: HTMLElement;
 	protected _cardBasketTemplate: HTMLTemplateElement;
@@ -171,7 +123,8 @@ export class ModalBasket extends Modal {
 	constructor(
 		template: HTMLElement,
 		basketTemplate: HTMLElement,
-		cardBascketTemplate: HTMLTemplateElement
+		cardBascketTemplate: HTMLTemplateElement,
+		order: IOrder
 	) {
 		super(template);
 		this._basketTemplate = basketTemplate;
@@ -183,6 +136,7 @@ export class ModalBasket extends Modal {
 	}
 
 	private checkoutHandler() {
+		order.setOrderedItems(bascket)
 		eventEmitter.emit('bascket:checkout');
 	}
 
@@ -263,6 +217,7 @@ export class ModalBasket extends Modal {
 		return this;
 	}
 
+	//если в козине нет товаров кнопка должна быть не активна
 	validateBascket(bascket: IBascket) {
 		const proceedButton = this._basketTemplate.querySelector('.basket__button');
 		if (bascket.getOrdersList().length === 0) {
@@ -274,23 +229,24 @@ export class ModalBasket extends Modal {
 	}
 }
 
+//модальное окно ввода адреса
 export class AddressModal extends Modal {
 	protected _addressTemplate: HTMLElement;
 	protected _adressForm;
-	protected _customer: ICustomer;
+	protected _order: IOrder;
 
 	constructor(
 		template: HTMLElement,
 		addressTemplate: HTMLElement,
-		customer: ICustomer
+		order: IOrder
 	) {
 		super(template);
-		this._customer = customer;
+		this._order = order;
 		this._addressTemplate = addressTemplate;
 		const formElement = this._addressTemplate.querySelector(
 			'form[name="order"]'
 		) as HTMLFormElement;
-		this._adressForm = new FormAdress(formElement, customer);
+		this._adressForm = new FormAdress(formElement, order);
 	}
 
 	open() {
@@ -310,27 +266,33 @@ export class AddressModal extends Modal {
 		this._adressForm
 			.getSubmitButton()
 			.removeEventListener('click', (event) =>
-				this._adressForm.submitHandler(event, this._adressForm.customer)
+				this._adressForm.submitHandler(event, this._adressForm.order)
 			);
 		super.close();
 		return this;
 	}
 }
 
+//модальное окно ввода контактов
 export class ModalContacts extends Modal {
 	protected _modalContent: HTMLElement;
-	protected _form: IForm;
+	protected _form: IFormContacts;
+	api: IApi
 
 	constructor(
 		template: HTMLElement,
 		content: HTMLElement,
-		customer: ICustomer
+		order: IOrder,
+		api: IApi
 	) {
 		super(template);
+		this.api = api
 		this._modalContent = content;
 		this._form = new FormContacts(
 			this._modalContent.querySelector('.form') as HTMLFormElement,
-			customer
+			order,
+			bascket,
+			api
 		);
 	}
 
@@ -339,8 +301,35 @@ export class ModalContacts extends Modal {
 		this._contentContainer.append(this._modalContent);
 		return this;
 	}
+
+	//при закрытии удаляем слушатели как окна так и формы
+	close(): this {
+		super.close();
+		if (this._form.emailInput) {
+			this._form.emailInput.removeEventListener(
+				'input',
+				this._form.emeilInputHandler.bind(this._form)
+			);
+		}
+		if (this._form.phoneInput) {
+			this._form.phoneInput.removeEventListener(
+				'input',
+				this._form.phoneInputHandler.bind(this._form)
+			);
+		}
+		if (this._form.submitButton) {
+			this._form.submitButton.removeEventListener(
+				'click',
+				(event: MouseEvent) =>
+					this._form.submitHandler(event, this._form.order, this.api)
+			);
+		}
+
+		return this;
+	}
 }
 
+//модальное окно завершения заказа
 export class FinalModal extends Modal {
 	protected _modalContent: HTMLElement;
 	protected _finalButton: HTMLButtonElement;
@@ -352,24 +341,28 @@ export class FinalModal extends Modal {
 			'.order-success__close'
 		);
 		this._finalButton.addEventListener('click', () => {
-			bascket.removeAllProducts();
-			eventEmitter.emit('bascket:changed');
 			this.close();
 		});
 	}
 
-	render(bascket: IBascket) {
+	render() {
 		this._modalContent.querySelector(
 			'.order-success__description'
-		).textContent = `Списано ${bascket
-			.countTotalprice()
-			.toString()} синапсисов`;
+		).textContent = `Списано ${order.getLastOrderPrice()} синапсисов`;
 		return this;
 	}
 
 	open() {
 		super.open();
 		this._contentContainer.append(this._modalContent);
+		return this;
+	}
+
+	close(): this {
+		super.close();
+		this._finalButton.removeEventListener('click', () => {
+			this.close();
+		});
 		return this;
 	}
 }

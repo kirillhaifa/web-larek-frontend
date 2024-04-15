@@ -2,13 +2,11 @@ import {
 	IProductModel,
 	Product,
 	IProductsListModel,
-	ProductListResponse,
 	IBascket,
-	ICustomer,
+	IOrder,
 } from '../types';
-import { Api } from './base/api';
-import { CDN_URL, API_URL } from '../utils/constants';
 
+//модель отдельного продукта
 export class ProductModel implements IProductModel {
 	private product: Product;
 
@@ -19,8 +17,13 @@ export class ProductModel implements IProductModel {
 	getProduct(): Product {
 		return this.product;
 	}
+
+	getProductId() {
+		return this.getProduct().id
+	}
 }
 
+//модель всего списка продуктов
 export class ProductsListModel implements IProductsListModel {
 	private productList: ProductModel[];
 
@@ -37,6 +40,7 @@ export class ProductsListModel implements IProductsListModel {
 	}
 }
 
+//модель корзины
 export class Bascket implements IBascket {
 	ordersList: IProductModel[];
 
@@ -82,25 +86,43 @@ export class Bascket implements IBascket {
 	}
 }
 
-export class Customer implements ICustomer {
-	protected _paymentMethod: string = '';
-	protected _address: string = '';
-	protected _email: string = '';
-	protected _phoneNumber: string = '';
+//модель заказа
+export class Order implements IOrder {
+	payment: string = '';
+	address: string = '';
+	email: string = '';
+	phone: string = '';
+  total: number;
+	items: string[] = []
+
 
 	setPaymentMethod(paymentMethod: string) {
-		this._paymentMethod = paymentMethod;
+		this.payment = paymentMethod;
 	}
 
 	setAddress(address: string) {
-		this._address = address;
+		this.address = address;
 	}
 
 	setEmail(email: string) {
-		this._email = email;
+		this.email = email;
 	}
 
 	setPhoneNumber(phoneNumber: string) {
-		this._phoneNumber = phoneNumber;
+		this.phone = phoneNumber;
+	}
+
+	setLastOrderPrice(lastOrderPrice: number) {
+		this.total = lastOrderPrice;
+	}
+
+	setOrderedItems(bascket: IBascket) {
+		bascket.getOrdersList().forEach(item => {
+			this.items.push(item.getProductId())
+		});
+	}
+
+	getLastOrderPrice() {
+		return this.total
 	}
 }

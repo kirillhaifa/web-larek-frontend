@@ -1,5 +1,6 @@
 import { IForm } from "../../types";
 
+//базовый код формы
 export class Form implements IForm {
 	protected _form: HTMLFormElement | null;
 	protected _submitButton: HTMLButtonElement;
