@@ -118,7 +118,9 @@ export class Order implements IOrder {
 
 	setOrderedItems(bascket: IBascket) {
 		bascket.getOrdersList().forEach(item => {
-			this.items.push(item.getProductId())
+			if (item.getProduct().price) {
+				this.items.push(item.getProductId())
+			}
 		});
 	}
 

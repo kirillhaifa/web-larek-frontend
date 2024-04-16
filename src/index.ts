@@ -1,7 +1,7 @@
 import './scss/styles.scss';
 import { Api } from './components/base/api';
 import { API_URL } from './utils/constants';
-import { ProductListResponse, IProductModel } from './types';
+import { ProductListResponse, IProductModel, IOrder, IApi } from './types';
 import { CardTemplate, ProductCard } from './components/card';
 import { Bascket, ProductsListModel, Order } from './components/model';
 import { EventEmitter } from './components/base/events';
@@ -146,3 +146,17 @@ eventEmitter.on('finalModal:open', () => {
 	const finalContacts = new FinalModal(modalContainer, finalTemplateContent);
 	finalContacts.render().open();
 });
+
+const postOrder = (order: IOrder, api: IApi) => {
+	api
+		.post('/order', order)
+		.then((response: { id: string; total: number }) => {
+			// Обработка успешного ответа
+			console.log('Order created successfully:', response);
+		})
+		.catch((error: any) => {
+			console.error('Error creating order:', error);
+		});
+}
+
+eventEmitter.on('order:send', () => postOrder(order, api))

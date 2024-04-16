@@ -5,8 +5,6 @@ import { eventEmitter } from '../index';
 
 // Поиск и копирование тимплейта карточки
 export class CardTemplate implements ICardTemplate {
-  private template: HTMLElement | null = null;
-
   getTemplate(templateId: string): HTMLElement {
       const templateElement = document.querySelector('#' + templateId) as HTMLTemplateElement | null;
       

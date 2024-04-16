@@ -1,11 +1,5 @@
 import { eventEmitter } from '..';
-import {
-	IBascket,
-	IOrder,
-	IFormAddress,
-	IFormContacts,
-	IApi,
-} from '../types';
+import { IBascket, IOrder, IFormAddress, IFormContacts, IApi } from '../types';
 import { Form } from './base/form';
 
 //форма адреса и способа оплаты
@@ -110,7 +104,11 @@ export class FormContacts extends Form implements IFormContacts {
 	order: IOrder;
 	bascket: IBascket;
 
-	constructor(form: HTMLFormElement, order: IOrder, bascket: IBascket, api: IApi) {
+	constructor(
+		form: HTMLFormElement,
+		order: IOrder,
+		bascket: IBascket,
+	) {
 		super(form);
 		this.order = order;
 		this.bascket = bascket;
@@ -131,7 +129,7 @@ export class FormContacts extends Form implements IFormContacts {
 		);
 
 		this._submitButton.addEventListener('click', (event) =>
-			this.submitHandler(event, order, api)
+			this.submitHandler(event, order)
 		);
 	}
 
@@ -148,29 +146,21 @@ export class FormContacts extends Form implements IFormContacts {
 	}
 
 	//при этом происходит сразу много всего, очистка корзины, api/post
-	submitHandler(event: MouseEvent, order: IOrder, api: IApi) {
+	submitHandler(event: MouseEvent, order: IOrder) {
 		event.preventDefault();
 		const payedPrice = this.bascket.countTotalprice();
-		order.setLastOrderPrice(payedPrice)
-		this.bascket.removeAllProducts();
-		eventEmitter.emit('bascket:changed');
-		eventEmitter.emit('finalModal:open');
+		order.setLastOrderPrice(payedPrice);
 		order.setEmail(this.emailInput.value);
 		order.setPhoneNumber(this.phoneInput.value);
-		this.postOrder(order, api)
+		//бесценные лоты купить нельзя,
+		//если сумма заказа равна нулю не демаем запрос на сервер
+		if (payedPrice !== 0) {
+			eventEmitter.emit('order:send')
+		}
+		this.bascket.removeAllProducts();
+		eventEmitter.emit('finalModal:open');
+		eventEmitter.emit('bascket:changed');
 	}
-
-private postOrder(order: IOrder, api: IApi) {
-	api.post('/order', order)
-	.then((response: { id: string, total: number }) => {
-			// Обработка успешного ответа
-			console.log('Order created successfully:', response);
-	})
-	.catch((error: any) => {
-			console.error('Error creating order:', error);
-	});
-}
-
 
 	renderError() {
 		const errorMessage = this._form.querySelector('.form__errors');

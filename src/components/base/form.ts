@@ -21,12 +21,6 @@ export class Form implements IForm {
     return this._submitButton
   }
 
-	getFormValue(): FormData | null {
-		if (!this._form) return null;
-
-		return new FormData(this._form);
-	}
-
 	validate() {
 		const inputs = Array.from(this._form.querySelectorAll('.form__input'));
 		if (

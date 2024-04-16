@@ -291,8 +291,7 @@ export class ModalContacts extends Modal {
 		this._form = new FormContacts(
 			this._modalContent.querySelector('.form') as HTMLFormElement,
 			order,
-			bascket,
-			api
+			bascket
 		);
 	}
 
