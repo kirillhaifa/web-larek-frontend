@@ -3,8 +3,7 @@ import {
 	IOrder,
 	IFormContacts,
 	IProductModel,
-	Product,
-	IApi,
+	Product
 } from '../types';
 import { CDN_URL } from '../utils/constants';
 import { bascket, order, eventEmitter } from '../index';
@@ -22,7 +21,6 @@ export class ModalProduct extends Modal {
 		template: HTMLElement,
 		content: HTMLElement,
 		product: IProductModel,
-		bascket: IBascket
 	) {
 		super(template);
 		this._modalContent = content;
@@ -124,7 +122,6 @@ export class ModalBasket extends Modal {
 		template: HTMLElement,
 		basketTemplate: HTMLElement,
 		cardBascketTemplate: HTMLTemplateElement,
-		order: IOrder
 	) {
 		super(template);
 		this._basketTemplate = basketTemplate;
@@ -233,7 +230,6 @@ export class ModalBasket extends Modal {
 export class AddressModal extends Modal {
 	protected _addressTemplate: HTMLElement;
 	protected _adressForm;
-	protected _order: IOrder;
 
 	constructor(
 		template: HTMLElement,
@@ -241,7 +237,6 @@ export class AddressModal extends Modal {
 		order: IOrder
 	) {
 		super(template);
-		this._order = order;
 		this._addressTemplate = addressTemplate;
 		const formElement = this._addressTemplate.querySelector(
 			'form[name="order"]'
@@ -266,7 +261,7 @@ export class AddressModal extends Modal {
 		this._adressForm
 			.getSubmitButton()
 			.removeEventListener('click', (event) =>
-				this._adressForm.submitHandler(event, this._adressForm.order)
+				this._adressForm.submitHandler(event, order)
 			);
 		super.close();
 		return this;
@@ -277,16 +272,13 @@ export class AddressModal extends Modal {
 export class ModalContacts extends Modal {
 	protected _modalContent: HTMLElement;
 	protected _form: IFormContacts;
-	api: IApi
 
 	constructor(
 		template: HTMLElement,
 		content: HTMLElement,
 		order: IOrder,
-		api: IApi
 	) {
 		super(template);
-		this.api = api
 		this._modalContent = content;
 		this._form = new FormContacts(
 			this._modalContent.querySelector('.form') as HTMLFormElement,
@@ -320,7 +312,7 @@ export class ModalContacts extends Modal {
 			this._form.submitButton.removeEventListener(
 				'click',
 				(event: MouseEvent) =>
-					this._form.submitHandler(event, this._form.order, this.api)
+					this._form.submitHandler(event, order, bascket)
 			);
 		}
 

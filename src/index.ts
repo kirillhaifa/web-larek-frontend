@@ -49,7 +49,7 @@ eventEmitter.on('productModal:open', (data: { product: IProductModel }) => {
 	) as HTMLTemplateElement;
 	const content = contentTemplate.content.cloneNode(true) as HTMLElement;
 
-	const modalProduct = new ModalProduct(modalContainer, content, data.product, bascket);
+	const modalProduct = new ModalProduct(modalContainer, content, data.product);
 	modalProduct.render().controlButton().open();
 });
 
@@ -68,8 +68,7 @@ eventEmitter.on('bascketModal:open', () => {
 	const modalBascket = new ModalBasket(
 		modalContainer,
 		bascketContentTemplate,
-		cardBascketTemplate,
-		order
+		cardBascketTemplate
 	);
 
 	modalBascket.render(bascket).validateBascket(bascket).open();
@@ -94,8 +93,7 @@ eventEmitter.on('bascket:changed', () => {
 		const modalBascket = new ModalBasket(
 			modalContainer,
 			bascketContentTemplate,
-			cardBascketTemplate,
-			order
+			cardBascketTemplate
 		);
 		modalBascket.render(bascket).validateBascket(bascket).open();
 	}
@@ -129,8 +127,7 @@ eventEmitter.on('modalContacts:open', () => {
 	const modalContacts = new ModalContacts(
 		modalContainer,
 		contactsTemplateContent,
-		order,
-		api
+		order
 	);
 	modalContacts.open();
 });

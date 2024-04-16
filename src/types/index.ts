@@ -76,7 +76,6 @@ export interface IForm {
 //типизация формы адреса
 export interface IFormAddress extends IForm {
   buttonsAlt: NodeListOf<HTMLButtonElement>;
-  order: IOrder;
 
   buttonAltHandler(): void;
   submitHandler(event: MouseEvent, order: IOrder): void;
@@ -87,11 +86,10 @@ export interface IFormContacts extends IForm {
   emailInput: HTMLInputElement;
   phoneInput: HTMLInputElement;
   submitButton: HTMLButtonElement;
-  order: IOrder;
 
   emeilInputHandler(): void;
   phoneInputHandler(): void;
-  submitHandler(event: MouseEvent, order: IOrder, api: IApi): void;
+  submitHandler(event: MouseEvent, order: IOrder, bascket: IBascket): void;
   renderError(): this;
 }
 

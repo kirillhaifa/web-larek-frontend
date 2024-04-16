@@ -1,4 +1,4 @@
-import { eventEmitter } from '..';
+import { bascket, eventEmitter } from '..';
 import { IBascket, IOrder, IFormAddress, IFormContacts, IApi } from '../types';
 import { Form } from './base/form';
 
@@ -6,11 +6,9 @@ import { Form } from './base/form';
 export class FormAdress extends Form implements IFormAddress {
 	protected _adressInput: HTMLInputElement;
 	buttonsAlt: NodeListOf<HTMLButtonElement>;
-	order: IOrder;
 
 	constructor(form: HTMLFormElement, order: IOrder) {
 		super(form);
-		this.order = order;
 		this.buttonsAlt = this._form.querySelectorAll(
 			'.button_alt'
 		) as NodeListOf<HTMLButtonElement>;
@@ -101,17 +99,13 @@ export class FormContacts extends Form implements IFormContacts {
 	emailInput: HTMLInputElement;
 	phoneInput: HTMLInputElement;
 	submitButton: HTMLButtonElement;
-	order: IOrder;
-	bascket: IBascket;
 
 	constructor(
 		form: HTMLFormElement,
 		order: IOrder,
-		bascket: IBascket,
+		bascket: IBascket
 	) {
 		super(form);
-		this.order = order;
-		this.bascket = bascket;
 		this.emailInput = this._form.querySelector(
 			'input[name="email"]'
 		) as HTMLInputElement;
@@ -129,7 +123,7 @@ export class FormContacts extends Form implements IFormContacts {
 		);
 
 		this._submitButton.addEventListener('click', (event) =>
-			this.submitHandler(event, order)
+			this.submitHandler(event, order, bascket)
 		);
 	}
 
@@ -146,9 +140,9 @@ export class FormContacts extends Form implements IFormContacts {
 	}
 
 	//при этом происходит сразу много всего, очистка корзины, api/post
-	submitHandler(event: MouseEvent, order: IOrder) {
+	submitHandler(event: MouseEvent, order: IOrder, bascket: IBascket) {
 		event.preventDefault();
-		const payedPrice = this.bascket.countTotalprice();
+		const payedPrice = bascket.countTotalprice();
 		order.setLastOrderPrice(payedPrice);
 		order.setEmail(this.emailInput.value);
 		order.setPhoneNumber(this.phoneInput.value);
@@ -157,7 +151,7 @@ export class FormContacts extends Form implements IFormContacts {
 		if (payedPrice !== 0) {
 			eventEmitter.emit('order:send')
 		}
-		this.bascket.removeAllProducts();
+		bascket.removeAllProducts();
 		eventEmitter.emit('finalModal:open');
 		eventEmitter.emit('bascket:changed');
 	}
