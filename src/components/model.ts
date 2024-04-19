@@ -126,4 +126,10 @@ export class Order implements IOrder {
 	getLastOrderPrice() {
 		return this.total
 	}
+
+	clean() {
+		this.total = 0
+		this.items = []
+		return this
+	}
 }

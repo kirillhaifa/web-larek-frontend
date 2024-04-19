@@ -147,7 +147,13 @@ const postOrder = (order: IOrder, api: IApi) => {
 		.then((response: { id: string; total: number }) => {
 			// Обработка успешного ответа
 			console.log('Order created successfully:', response);
+			//открываем финальное модальное окно только если сработал api 
+			
 			eventEmitter.emit('finalModal:open');
+			bascket.removeAllProducts();
+			eventEmitter.emit('bascket:changed');
+			order.clean()
+
 		})
 		.catch((error: any) => {
 			console.error('Error creating order:', error);

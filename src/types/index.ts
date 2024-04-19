@@ -64,6 +64,7 @@ export interface IOrder {
 	setPhoneNumber(phoneNumber: string): void;
   setLastOrderPrice(lastOrderPrice: number): void
   getLastOrderPrice(): number
+  clean(): void
 }
 
 //типизация базовой формы

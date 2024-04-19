@@ -149,9 +149,8 @@ export class FormContacts extends Form implements IFormContacts {
 		order.setLastOrderPrice(bascket.countTotalprice());
 		order.setEmail(this.emailInput.value);
 		order.setPhoneNumber(this.phoneInput.value);
+		console.log(order)
 		eventEmitter.emit('order:send');
-		bascket.removeAllProducts();
-		eventEmitter.emit('bascket:changed');
 	}
 
 	renderError() {
