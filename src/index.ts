@@ -30,6 +30,7 @@ api
 	.get('/product')
 	.then((response: ProductListResponse) => {
 		const productList = new ProductsListModel(response.items);
+		console.log(productList)
 		productList.getProductList().forEach((product: IProductModel) => {
 			const cardTemplate = new CardTemplate();
 			const template = cardTemplate.getTemplate('card-catalog');

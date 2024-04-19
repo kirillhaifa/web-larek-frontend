@@ -3,28 +3,40 @@ import {
 	IOrder,
 	IFormContacts,
 	IProductModel,
-	Product
+	Product,
 } from '../types';
 import { CDN_URL } from '../utils/constants';
 import { bascket, order, eventEmitter } from '../index';
-import { FormAdress, FormContacts } from './form';
+import { FormAdress, FormContacts } from './forms';
 import { Modal } from './base/modal';
 
 // Модальное окно продукта
+// класс изменен, устранены лишние поиски внутри методов
 export class ModalProduct extends Modal {
 	protected _modalContent: HTMLElement;
 	protected _product: IProductModel;
 	protected _addToBascketButton: HTMLButtonElement;
 	protected _addToBascketHandler: () => void;
+	protected _category: HTMLElement;
+	protected _title: HTMLElement;
+	protected _text: HTMLElement;
+	protected _price: HTMLElement;
+	protected _image: HTMLImageElement;
 
 	constructor(
 		template: HTMLElement,
 		content: HTMLElement,
-		product: IProductModel,
+		product: IProductModel
 	) {
 		super(template);
 		this._modalContent = content;
 		this._product = product;
+
+		this._category = this._modalContent.querySelector('.card__category');
+		this._title = this._modalContent.querySelector('.card__title');
+		this._price = this._modalContent.querySelector('.card__price');
+		this._image = this._modalContent.querySelector('.card__image');
+
 		this._addToBascketHandler = () => {
 			this.addOrRemoveToBascket(this._addToBascketButton, bascket, product);
 		};
@@ -46,10 +58,10 @@ export class ModalProduct extends Modal {
 	) {
 		if (this.checkIfProductAdded(bascket, this._product.getProduct())) {
 			bascket.removeProduct(product);
-			addToBascketButton.textContent = 'В корзину';
+			this.setText(addToBascketButton, 'В корзину');
 		} else {
 			bascket.addProduct(product);
-			addToBascketButton.textContent = 'Убрать';
+			this.setText(addToBascketButton, 'Убрать из корзины');
 		}
 		eventEmitter.emit('bascket:changed');
 	}
@@ -62,35 +74,24 @@ export class ModalProduct extends Modal {
 
 	render() {
 		const productData = this._product.getProduct();
-		this._modalContent.querySelector('.card__category').textContent =
-			productData.category;
-		this._modalContent.querySelector('.card__title').textContent =
-			productData.title;
-		this._modalContent.querySelector('.card__text').textContent =
-			productData.description;
+		this.setText(this._category, productData.category);
+		this.setText(this._text, productData.description);
+
 		if (productData.price) {
-			this._modalContent.querySelector(
-				'.card__price'
-			).textContent = `${productData.price.toString()} синапсов`;
+			this.setText(this._price, `${productData.price.toString()} синапсов`);
 		} else {
-			this._modalContent.querySelector('.card__price').textContent = 'Бесценно';
+			this.setText(this._price, 'Бесценно');
 		}
-		this._modalContent
-			.querySelector('.card__image')
-			.setAttribute('src', CDN_URL + productData.image);
-		this._modalContent
-			.querySelector('.card__image')
-			.setAttribute('alt', productData.title);
+		this.setImage(this._image, CDN_URL + productData.image, productData.title);
 
 		return this;
 	}
 
 	controlButton() {
-		const cardButton = this._modalContent.querySelector('.card__button');
 		if (this.checkIfProductAdded(bascket, this._product.getProduct())) {
-			cardButton.textContent = 'Убрать';
+			this.setText(this._addToBascketButton, 'Убрать из корзины');
 		} else {
-			cardButton.textContent = 'В корзину';
+			this.setText(this._addToBascketButton, 'В корзину');
 		}
 		return this;
 	}
@@ -117,11 +118,12 @@ export class ModalBasket extends Modal {
 	protected _basketTemplate: HTMLElement;
 	protected _cardBasketTemplate: HTMLTemplateElement;
 	protected _checkoutOrderButton: HTMLButtonElement;
+	protected _ordersList: HTMLElement;
 
 	constructor(
 		template: HTMLElement,
 		basketTemplate: HTMLElement,
-		cardBascketTemplate: HTMLTemplateElement,
+		cardBascketTemplate: HTMLTemplateElement
 	) {
 		super(template);
 		this._basketTemplate = basketTemplate;
@@ -130,10 +132,12 @@ export class ModalBasket extends Modal {
 		this._checkoutOrderButton =
 			this._basketTemplate.querySelector('.basket__button');
 		this._checkoutOrderButton.addEventListener('click', this.checkoutHandler);
+
+		this._ordersList = this._basketTemplate.querySelector('.basket__list');
 	}
 
 	private checkoutHandler() {
-		order.setOrderedItems(bascket)
+		order.setOrderedItems(bascket);
 		eventEmitter.emit('bascket:checkout');
 	}
 
@@ -142,10 +146,12 @@ export class ModalBasket extends Modal {
 		eventEmitter.emit('bascket:changed');
 	}
 
+	//насколько я понимаю поиск элементов в этом методе нельзя вынести за метод,
+	//тк рендерятся карточки товаров внутри модального окна.
+	//возможно стоит сделать класс cardBascket? я как понимаю это не уменьшит код
 	render(bascket: IBascket) {
-		const ordersList = this._basketTemplate.querySelector('.basket__list');
 		const orders = bascket.getOrdersList();
-		ordersList.innerHTML = '';
+		this._ordersList.innerHTML = '';
 		for (let i = 0; i < orders.length; i++) {
 			const product = orders[i];
 			if (product) {
@@ -153,19 +159,27 @@ export class ModalBasket extends Modal {
 					true
 				) as HTMLElement;
 				const productData = product.getProduct();
-				cardBasketTemplate.querySelector('.card__title').textContent =
-					productData.title;
+				this.setText(
+					cardBasketTemplate.querySelector('.card__title'),
+					productData.title
+				);
+
 				if (productData.price) {
-					cardBasketTemplate.querySelector(
-						'.card__price'
-					).textContent = `${productData.price.toString()} синапсов`;
+					this.setText(
+						cardBasketTemplate.querySelector('.card__price'),
+						`${productData.price.toString()} синапсов`
+					);
 				} else {
-					cardBasketTemplate.querySelector('.card__price').textContent =
-						'Бесценно';
+					this.setText(
+						cardBasketTemplate.querySelector('.card__price'),
+						'Бесценно'
+					);
 				}
-				cardBasketTemplate.querySelector(
-					'.basket__item-index'
-				).textContent = `${i + 1}`;
+
+				this.setText(
+					cardBasketTemplate.querySelector('.basket__item-index'),
+					`${i + 1}`
+				);
 
 				const removeProductButton = cardBasketTemplate.querySelector(
 					'.basket__item-delete'
@@ -174,7 +188,7 @@ export class ModalBasket extends Modal {
 					'click',
 					this.removeProductHandler.bind(this, product)
 				);
-				ordersList.append(cardBasketTemplate);
+				this._ordersList.append(cardBasketTemplate);
 			}
 		}
 		this._basketTemplate.querySelector(
@@ -216,12 +230,26 @@ export class ModalBasket extends Modal {
 
 	//если в козине нет товаров кнопка должна быть не активна
 	validateBascket(bascket: IBascket) {
-		const proceedButton = this._basketTemplate.querySelector('.basket__button');
-		if (bascket.getOrdersList().length === 0) {
-			proceedButton.setAttribute('disabled', 'disabled');
-		} else {
-			proceedButton.removeAttribute('disabled');
+		//условие - корзина не пуста
+		const noItemsBuscket = bascket.getOrdersList().length === 0
+		//условие - в корзине есть товары имеющие стоимость 
+		const onlyNonValuebleItems = bascket.getOrdersList().every((product) => {
+			return product.getProduct().price === null;
+		})
+
+		if (noItemsBuscket) { 
+			//коризна пуста - кнопка "оформить", но не активна
+			this.setDisabled(this._checkoutOrderButton, noItemsBuscket);
+			this.setText(this._checkoutOrderButton, 'Оформить');
+		} else if (onlyNonValuebleItems) { 
+			//корзина не пуста - кнопка нельзя купить, неактивна
+			this.setDisabled(this._checkoutOrderButton, onlyNonValuebleItems);
+			this.setText(this._checkoutOrderButton, 'Нельзя купить');
+		} else if (!noItemsBuscket && !onlyNonValuebleItems) { 
+			//коризна не пуста и есть товары с ценой - кнопка "оформить активна",
+			this.setText(this._checkoutOrderButton, 'Оформить');
 		}
+
 		return this;
 	}
 }
@@ -273,11 +301,7 @@ export class ModalContacts extends Modal {
 	protected _modalContent: HTMLElement;
 	protected _form: IFormContacts;
 
-	constructor(
-		template: HTMLElement,
-		content: HTMLElement,
-		order: IOrder,
-	) {
+	constructor(template: HTMLElement, content: HTMLElement, order: IOrder) {
 		super(template);
 		this._modalContent = content;
 		this._form = new FormContacts(
@@ -311,8 +335,7 @@ export class ModalContacts extends Modal {
 		if (this._form.submitButton) {
 			this._form.submitButton.removeEventListener(
 				'click',
-				(event: MouseEvent) =>
-					this._form.submitHandler(event, order, bascket)
+				(event: MouseEvent) => this._form.submitHandler(event, order, bascket)
 			);
 		}
 
@@ -324,10 +347,14 @@ export class ModalContacts extends Modal {
 export class FinalModal extends Modal {
 	protected _modalContent: HTMLElement;
 	protected _finalButton: HTMLButtonElement;
+	protected _description: HTMLElement;
 
 	constructor(template: HTMLElement, content: HTMLElement) {
 		super(template);
 		this._modalContent = content;
+		this._description = this._modalContent.querySelector(
+			'.order-success__description'
+		);
 		this._finalButton = this._modalContent.querySelector(
 			'.order-success__close'
 		);
@@ -337,9 +364,10 @@ export class FinalModal extends Modal {
 	}
 
 	render() {
-		this._modalContent.querySelector(
-			'.order-success__description'
-		).textContent = `Списано ${order.getLastOrderPrice()} синапсисов`;
+		this.setText(
+			this._description,
+			`Списано ${order.getLastOrderPrice()} синапсисов`
+		);
 		return this;
 	}
 

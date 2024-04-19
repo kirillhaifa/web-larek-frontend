@@ -5,10 +5,13 @@ import { Form } from './base/form';
 //форма адреса и способа оплаты
 export class FormAdress extends Form implements IFormAddress {
 	protected _adressInput: HTMLInputElement;
+	protected _errorMessage: HTMLElement;
 	buttonsAlt: NodeListOf<HTMLButtonElement>;
 
 	constructor(form: HTMLFormElement, order: IOrder) {
 		super(form);
+
+		this._errorMessage = this._form.querySelector('.form__errors');
 		this.buttonsAlt = this._form.querySelectorAll(
 			'.button_alt'
 		) as NodeListOf<HTMLButtonElement>;
@@ -83,11 +86,13 @@ export class FormAdress extends Form implements IFormAddress {
 			this._adressInput.validity.valid &&
 			this.returnChoosenValue(this.buttonsAlt) // должна быть нажата кнопка
 		) {
-			this._form.querySelector('.form__errors').textContent = '';
+			this.setText(this._errorMessage, '');
 			this.valid = true;
 		} else {
-			this._form.querySelector('.form__errors').textContent =
-				'Введите адрес и выберите способ оплаты';
+			this.setText(
+				this._errorMessage,
+				'Введите адрес и выберите способ оплаты'
+			);
 			this.valid = false;
 		}
 		return this;
@@ -99,12 +104,9 @@ export class FormContacts extends Form implements IFormContacts {
 	emailInput: HTMLInputElement;
 	phoneInput: HTMLInputElement;
 	submitButton: HTMLButtonElement;
+	protected _errorMessage: HTMLElement
 
-	constructor(
-		form: HTMLFormElement,
-		order: IOrder,
-		bascket: IBascket
-	) {
+	constructor(form: HTMLFormElement, order: IOrder, bascket: IBascket) {
 		super(form);
 		this.emailInput = this._form.querySelector(
 			'input[name="email"]'
@@ -121,6 +123,8 @@ export class FormContacts extends Form implements IFormContacts {
 			'input',
 			this.phoneInputHandler.bind(this)
 		);
+
+		this._errorMessage = this._form.querySelector('.form__errors');
 
 		this._submitButton.addEventListener('click', (event) =>
 			this.submitHandler(event, order, bascket)
@@ -139,25 +143,18 @@ export class FormContacts extends Form implements IFormContacts {
 		this.validate().renderError().controlSubmitButton();
 	}
 
-	//при этом происходит сразу много всего, очистка корзины, api/post
+	//при этом происходит сразу много всего, очистка корзины, api/post, 
 	submitHandler(event: MouseEvent, order: IOrder, bascket: IBascket) {
 		event.preventDefault();
-		const payedPrice = bascket.countTotalprice();
-		order.setLastOrderPrice(payedPrice);
+		order.setLastOrderPrice(bascket.countTotalprice());
 		order.setEmail(this.emailInput.value);
 		order.setPhoneNumber(this.phoneInput.value);
-		//бесценные лоты купить нельзя,
-		//если сумма заказа равна нулю не демаем запрос на сервер
-		if (payedPrice !== 0) {
-			eventEmitter.emit('order:send')
-		}
+		eventEmitter.emit('order:send');
 		bascket.removeAllProducts();
-		eventEmitter.emit('finalModal:open');
 		eventEmitter.emit('bascket:changed');
 	}
 
 	renderError() {
-		const errorMessage = this._form.querySelector('.form__errors');
 		let message = '';
 
 		switch (true) {
@@ -175,7 +172,7 @@ export class FormContacts extends Form implements IFormContacts {
 				break;
 		}
 
-		errorMessage.textContent = message;
+		this.setText(this._errorMessage, message)
 		return this;
 	}
 }

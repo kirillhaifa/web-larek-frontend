@@ -1,13 +1,18 @@
 import { IForm } from "../../types";
+import { Component } from "./component";
 
 //базовый код формы
-export class Form implements IForm {
+export class Form extends Component<IForm> {
 	protected _form: HTMLFormElement | null;
 	protected _submitButton: HTMLButtonElement;
+	protected _inputs: NodeListOf<HTMLInputElement>
 	valid: boolean = false;
 
 	constructor(form: HTMLFormElement) {
+		super()
 		this._form = form;
+		this._inputs = this._form.querySelectorAll('.form__input');
+
 		this._submitButton = this._form.querySelector(
 			'.button[type="submit"]'
 		) as HTMLButtonElement;
@@ -15,6 +20,7 @@ export class Form implements IForm {
 		this._form.addEventListener('input', () => {
 			this.validate().controlSubmitButton();
 		});
+
 	}
 
   getSubmitButton() {
@@ -22,9 +28,7 @@ export class Form implements IForm {
   }
 
 	validate() {
-		const inputs = Array.from(this._form.querySelectorAll('.form__input'));
-		if (
-			inputs.every((input: HTMLInputElement) => {
+		if ( Array.from(this._inputs).every((input: HTMLInputElement) => {
 				return input.validity.valid;
 			})
 		) {
@@ -37,11 +41,7 @@ export class Form implements IForm {
   
 
 	controlSubmitButton() {
-		if (this.valid) {
-			this._submitButton.removeAttribute('disabled');
-		} else {
-			this._submitButton.setAttribute('disabled', 'disabled');
-		}
+		this.setDisabled(this._submitButton, !this.valid)
 		return this;
 	}
 }

@@ -95,7 +95,6 @@ export class Order implements IOrder {
   total: number;
 	items: string[] = []
 
-
 	setPaymentMethod(paymentMethod: string) {
 		this.payment = paymentMethod;
 	}
