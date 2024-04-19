@@ -151,6 +151,7 @@ const postOrder = (order: IOrder, api: IApi) => {
 		.then((response: { id: string; total: number }) => {
 			// Обработка успешного ответа
 			console.log('Order created successfully:', response);
+			eventEmitter.emit('finalModal:open')
 		})
 		.catch((error: any) => {
 			console.error('Error creating order:', error);
