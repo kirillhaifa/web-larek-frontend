@@ -1,15 +1,15 @@
-import { IForm } from "../../types";
-import { Component } from "./component";
+import { IForm } from '../../types';
+import { Component } from './component';
 
 //базовый код формы
 export class Form extends Component<IForm> {
 	protected _form: HTMLFormElement | null;
 	protected _submitButton: HTMLButtonElement;
-	protected _inputs: NodeListOf<HTMLInputElement>
+	protected _inputs: NodeListOf<HTMLInputElement>;
 	valid: boolean = false;
 
 	constructor(form: HTMLFormElement) {
-		super()
+		super();
 		this._form = form;
 		this._inputs = this._form.querySelectorAll('.form__input');
 
@@ -20,15 +20,15 @@ export class Form extends Component<IForm> {
 		this._form.addEventListener('input', () => {
 			this.validate().controlSubmitButton();
 		});
-
 	}
 
-  getSubmitButton() {
-    return this._submitButton
-  }
+	getSubmitButton() {
+		return this._submitButton;
+	}
 
 	validate() {
-		if ( Array.from(this._inputs).every((input: HTMLInputElement) => {
+		if (
+			Array.from(this._inputs).every((input: HTMLInputElement) => {
 				return input.validity.valid;
 			})
 		) {
@@ -38,10 +38,9 @@ export class Form extends Component<IForm> {
 		}
 		return this;
 	}
-  
 
 	controlSubmitButton() {
-		this.setDisabled(this._submitButton, !this.valid)
+		this.setDisabled(this._submitButton, !this.valid);
 		return this;
 	}
 }

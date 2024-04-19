@@ -2,7 +2,7 @@ import {
 	IProductModel,
 	Product,
 	IProductsListModel,
-	IBascket,
+	IBasket,
 	IOrder,
 } from '../types';
 
@@ -41,7 +41,7 @@ export class ProductsListModel implements IProductsListModel {
 }
 
 //модель корзины
-export class Bascket implements IBascket {
+export class Basket implements IBasket {
 	ordersList: IProductModel[];
 
 	constructor() {
@@ -115,8 +115,8 @@ export class Order implements IOrder {
 		this.total = lastOrderPrice;
 	}
 
-	setOrderedItems(bascket: IBascket) {
-		bascket.getOrdersList().forEach(item => {
+	setOrderedItems(basket: IBasket) {
+		basket.getOrdersList().forEach(item => {
 			if (item.getProduct().price) {
 				this.items.push(item.getProductId())
 			}

@@ -3,7 +3,7 @@ import { Api } from './components/base/api';
 import { API_URL } from './utils/constants';
 import { ProductListResponse, IProductModel, IOrder, IApi } from './types';
 import { CardTemplate, ProductCard } from './components/card';
-import { Bascket, ProductsListModel, Order } from './components/model';
+import { Basket, ProductsListModel, Order } from './components/model';
 import { EventEmitter } from './components/base/events';
 import {
 	ModalProduct,
@@ -11,11 +11,11 @@ import {
 	AddressModal,
 	ModalContacts,
 	FinalModal,
-} from './components/modal';
+} from './components/modals';
 
 // Кэширование элементов DOM
-export const bascketButton = document.querySelector('.header__basket');
-export const bascketCounter = bascketButton.querySelector(
+export const basketButton = document.querySelector('.header__basket');
+export const basketCounter = basketButton.querySelector(
 	'.header__basket-counter'
 );
 export const gallery = document.querySelector('.gallery') as HTMLElement;
@@ -26,17 +26,17 @@ export const modalContainer = document.querySelector(
 // Инициализация объектов
 export const api = new Api(API_URL);
 export const eventEmitter = new EventEmitter();
-export const bascket = new Bascket();
+export const basket = new Basket();
 export const order = new Order();
 
 //тимплейты
 const cardPreviewTemplate = document.querySelector(
 	'#card-preview'
 ) as HTMLTemplateElement;
-const bascketTemplate = document.querySelector(
+const basketTemplate = document.querySelector(
 	'#basket'
 ) as HTMLTemplateElement;
-const cardBascketTemplate = document.querySelector(
+const cardBasketTemplate = document.querySelector(
 	'#card-basket'
 ) as HTMLTemplateElement;
 const addressTemplate = document.querySelector('#order') as HTMLTemplateElement;
@@ -66,48 +66,49 @@ api
 //открытие модального окна продукта
 eventEmitter.on('productModal:open', (data: { product: IProductModel }) => {
 	const content = cardPreviewTemplate.content.cloneNode(true) as HTMLElement;
+	// Получаем единственный экземпляр модального окна продукта
 	const modalProduct = new ModalProduct(modalContainer, content, data.product);
 	modalProduct.render().controlButton().open();
 });
 
 //открытие модального окна корзины
-eventEmitter.on('bascketModal:open', () => {
-	const bascketContentTemplate = bascketTemplate.content.cloneNode(
+eventEmitter.on('basketModal:open', () => {
+	const basketContentTemplate = basketTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
-	const modalBascket = new ModalBasket(
+	const modalBasket = new ModalBasket(
 		modalContainer,
-		bascketContentTemplate,
-		cardBascketTemplate
+		basketContentTemplate,
+		cardBasketTemplate
 	);
-	modalBascket.render(bascket).validateBascket(bascket).open();
+	modalBasket.render(basket).validateBasket(basket).open();
 });
 
 //обработка изменений в коризне
-eventEmitter.on('bascket:changed', () => {
-	const currentNumber = bascket.countAmmount();
-	bascketCounter.textContent = currentNumber.toString();
-	const bascketContent = modalContainer.querySelector('.modal_active .basket');
-	if (bascketContent) {
-		const bascketContentTemplate = bascketTemplate.content.cloneNode(
+eventEmitter.on('basket:changed', () => {
+	const currentNumber = basket.countAmmount();
+	basketCounter.textContent = currentNumber.toString();
+	const basketContent = modalContainer.querySelector('.modal_active .basket');
+	if (basketContent) {
+		const basketContentTemplate = basketTemplate.content.cloneNode(
 			true
 		) as HTMLElement;
-		const modalBascket = new ModalBasket(
+		const modalBasket = new ModalBasket(
 			modalContainer,
-			bascketContentTemplate,
-			cardBascketTemplate
+			basketContentTemplate,
+			cardBasketTemplate
 		);
-		modalBascket.render(bascket).validateBascket(bascket).open();
+		modalBasket.render(basket).validateBasket(basket).open();
 	}
 });
 
 //слушатель для кнопки корзины
-bascketButton.addEventListener('click', () => {
-	eventEmitter.emit('bascketModal:open');
+basketButton.addEventListener('click', () => {
+	eventEmitter.emit('basketModal:open');
 });
 
 //переход от коризны к оформлению заказа
-eventEmitter.on('bascket:checkout', () => {
+eventEmitter.on('basket:checkout', () => {
 	const addressTemplateContent = addressTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
@@ -132,13 +133,14 @@ eventEmitter.on('modalContacts:open', () => {
 	modalContacts.open();
 });
 
+
 //открытие модального окна завершения заказа
 eventEmitter.on('finalModal:open', () => {
 	const finalTemplateContent = finalTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
-	const finalContacts = new FinalModal(modalContainer, finalTemplateContent);
-	finalContacts.render().open();
+	const finalModal = new FinalModal(modalContainer, finalTemplateContent);	
+	finalModal.render().open();
 });
 
 const postOrder = (order: IOrder, api: IApi) => {
@@ -150,8 +152,8 @@ const postOrder = (order: IOrder, api: IApi) => {
 			//открываем финальное модальное окно только если сработал api 
 			
 			eventEmitter.emit('finalModal:open');
-			bascket.removeAllProducts();
-			eventEmitter.emit('bascket:changed');
+			basket.removeAllProducts();
+			eventEmitter.emit('basket:changed');
 			order.clean()
 
 		})

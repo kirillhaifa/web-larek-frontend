@@ -1,5 +1,5 @@
-import { bascket, eventEmitter } from '..';
-import { IBascket, IOrder, IFormAddress, IFormContacts, IApi } from '../types';
+import { basket, eventEmitter } from '..';
+import { IBasket, IOrder, IFormAddress, IFormContacts, IApi } from '../types';
 import { Form } from './base/form';
 
 //форма адреса и способа оплаты
@@ -106,7 +106,7 @@ export class FormContacts extends Form implements IFormContacts {
 	submitButton: HTMLButtonElement;
 	protected _errorMessage: HTMLElement
 
-	constructor(form: HTMLFormElement, order: IOrder, bascket: IBascket) {
+	constructor(form: HTMLFormElement, order: IOrder, basket: IBasket) {
 		super(form);
 		this.emailInput = this._form.querySelector(
 			'input[name="email"]'
@@ -127,7 +127,7 @@ export class FormContacts extends Form implements IFormContacts {
 		this._errorMessage = this._form.querySelector('.form__errors');
 
 		this._submitButton.addEventListener('click', (event) =>
-			this.submitHandler(event, order, bascket)
+			this.submitHandler(event, order, basket)
 		);
 	}
 
@@ -144,9 +144,9 @@ export class FormContacts extends Form implements IFormContacts {
 	}
 
 	//при этом происходит сразу много всего, очистка корзины, api/post, 
-	submitHandler(event: MouseEvent, order: IOrder, bascket: IBascket) {
+	submitHandler(event: MouseEvent, order: IOrder, basket: IBasket) {
 		event.preventDefault();
-		order.setLastOrderPrice(bascket.countTotalprice());
+		order.setLastOrderPrice(basket.countTotalprice());
 		order.setEmail(this.emailInput.value);
 		order.setPhoneNumber(this.phoneInput.value);
 		console.log(order)

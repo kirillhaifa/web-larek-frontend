@@ -4,7 +4,6 @@
 export abstract class Component<T> {
   // Инструментарий для работы с DOM в дочерних компонентах
 
-
   // Переключить класс
   toggleClass(element: HTMLElement, className: string, force?: boolean) {
       element.classList.toggle(className, force);

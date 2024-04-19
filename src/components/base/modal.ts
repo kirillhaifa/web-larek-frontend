@@ -36,18 +36,6 @@ export class Modal extends Component <IModal> {
 	}
 
 	close() {
-		// Удаляем слушатели событий
-		if (this._closeButton) {
-			this._closeButton.removeEventListener('click', this.close.bind(this));
-		}
-		if (this._modalTemplate) {
-			this._modalTemplate.removeEventListener('click', this.close.bind(this));
-		}
-		if (this._content) {
-			this._content.removeEventListener('click', (event) =>
-				event.stopPropagation()
-			);
-		}
 		this._modalTemplate.classList.remove('modal_active');
 		document.body.style.overflow = '';
 		return this;

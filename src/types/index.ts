@@ -41,7 +41,7 @@ export interface IModal {
 }
 
 //типизация корзины
-export interface IBascket {
+export interface IBasket {
   getOrdersList(): IProductModel[]
   addProduct(product: IProductModel): void
   removeAllProducts(): void
@@ -90,7 +90,7 @@ export interface IFormContacts extends IForm {
 
   emeilInputHandler(): void;
   phoneInputHandler(): void;
-  submitHandler(event: MouseEvent, order: IOrder, bascket: IBascket): void;
+  submitHandler(event: MouseEvent, order: IOrder, basket: IBasket): void;
   renderError(): this;
 }
 

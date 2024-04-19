@@ -1,12 +1,12 @@
 import {
-	IBascket,
+	IBasket,
 	IOrder,
 	IFormContacts,
 	IProductModel,
 	Product,
 } from '../types';
 import { CDN_URL } from '../utils/constants';
-import { bascket, order, eventEmitter } from '../index';
+import { basket, order, eventEmitter } from '../index';
 import { FormAdress, FormContacts } from './forms';
 import { Modal } from './base/modal';
 
@@ -15,13 +15,14 @@ import { Modal } from './base/modal';
 export class ModalProduct extends Modal {
 	protected _modalContent: HTMLElement;
 	protected _product: IProductModel;
-	protected _addToBascketButton: HTMLButtonElement;
-	protected _addToBascketHandler: () => void;
+	protected _addToBasketButton: HTMLButtonElement;
+	protected _addToBasketHandler: () => void;
 	protected _category: HTMLElement;
 	protected _title: HTMLElement;
 	protected _text: HTMLElement;
 	protected _price: HTMLElement;
 	protected _image: HTMLImageElement;
+	private static instance: ModalProduct | null = null;
 
 	constructor(
 		template: HTMLElement,
@@ -36,47 +37,55 @@ export class ModalProduct extends Modal {
 		this._title = this._modalContent.querySelector('.card__title');
 		this._price = this._modalContent.querySelector('.card__price');
 		this._image = this._modalContent.querySelector('.card__image');
+		this._text = this._modalContent.querySelector('.card__text');
 
-		this._addToBascketHandler = () => {
-			this.addOrRemoveToBascket(this._addToBascketButton, bascket, product);
+		this._addToBasketHandler = () => {
+			this.addOrRemoveToBasket(this._addToBasketButton, basket, product);
 		};
 
-		this._addToBascketButton = this._modalContent.querySelector(
+		this._addToBasketButton = this._modalContent.querySelector(
 			'.button'
 		) as HTMLButtonElement;
 		('.button');
-		this._addToBascketButton.addEventListener(
+		this._addToBasketButton.addEventListener(
 			'click',
-			this._addToBascketHandler
+			this._addToBasketHandler
 		);
 	}
 
-	private addOrRemoveToBascket(
-		addToBascketButton: HTMLButtonElement,
-		bascket: IBascket,
+	public static getInstance(template: HTMLElement, content: HTMLElement, product: IProductModel): ModalProduct {
+		if (!ModalProduct.instance) {
+				ModalProduct.instance = new ModalProduct(template, content, product);
+		}
+		return ModalProduct.instance;
+}
+
+	private addOrRemoveToBasket(
+		addToBasketButton: HTMLButtonElement,
+		basket: IBasket,
 		product: IProductModel
 	) {
-		if (this.checkIfProductAdded(bascket, this._product.getProduct())) {
-			bascket.removeProduct(product);
-			this.setText(addToBascketButton, 'В корзину');
+		if (this.checkIfProductAdded(basket, this._product.getProduct())) {
+			basket.removeProduct(product);
+			this.setText(addToBasketButton, 'В корзину');
 		} else {
-			bascket.addProduct(product);
-			this.setText(addToBascketButton, 'Убрать из корзины');
+			basket.addProduct(product);
+			this.setText(addToBasketButton, 'Убрать из корзины');
 		}
-		eventEmitter.emit('bascket:changed');
+		eventEmitter.emit('basket:changed');
 	}
 
-	private checkIfProductAdded(bascket: IBascket, product: Product): boolean {
-		return bascket
+	private checkIfProductAdded(basket: IBasket, product: Product): boolean {
+		return basket
 			.getOrdersList()
 			.some((order) => order.getProduct().id === product.id);
 	}
 
 	render() {
 		const productData = this._product.getProduct();
+		this.setText(this._title, productData.title)
 		this.setText(this._category, productData.category);
 		this.setText(this._text, productData.description);
-
 		if (productData.price) {
 			this.setText(this._price, `${productData.price.toString()} синапсов`);
 		} else {
@@ -88,27 +97,18 @@ export class ModalProduct extends Modal {
 	}
 
 	controlButton() {
-		if (this.checkIfProductAdded(bascket, this._product.getProduct())) {
-			this.setText(this._addToBascketButton, 'Убрать из корзины');
+		if (this.checkIfProductAdded(basket, this._product.getProduct())) {
+			this.setText(this._addToBasketButton, 'Убрать из корзины');
 		} else {
-			this.setText(this._addToBascketButton, 'В корзину');
+			this.setText(this._addToBasketButton, 'В корзину');
 		}
 		return this;
 	}
 
 	open() {
 		super.open();
+		this._contentContainer.innerHTML = '';
 		this._contentContainer.append(this._modalContent);
-		return this;
-	}
-
-	close(): this {
-		super.close();
-		this._addToBascketButton.removeEventListener(
-			'click',
-			this._addToBascketHandler
-		);
-
 		return this;
 	}
 }
@@ -123,11 +123,11 @@ export class ModalBasket extends Modal {
 	constructor(
 		template: HTMLElement,
 		basketTemplate: HTMLElement,
-		cardBascketTemplate: HTMLTemplateElement
+		cardBasketTemplate: HTMLTemplateElement
 	) {
 		super(template);
 		this._basketTemplate = basketTemplate;
-		this._cardBasketTemplate = cardBascketTemplate;
+		this._cardBasketTemplate = cardBasketTemplate;
 
 		this._checkoutOrderButton =
 			this._basketTemplate.querySelector('.basket__button');
@@ -137,20 +137,20 @@ export class ModalBasket extends Modal {
 	}
 
 	private checkoutHandler() {
-		order.setOrderedItems(bascket);
-		eventEmitter.emit('bascket:checkout');
+		order.setOrderedItems(basket);
+		eventEmitter.emit('basket:checkout');
 	}
 
 	private removeProductHandler(product: IProductModel) {
-		bascket.removeProduct(product);
-		eventEmitter.emit('bascket:changed');
+		basket.removeProduct(product);
+		eventEmitter.emit('basket:changed');
 	}
 
 	//насколько я понимаю поиск элементов в этом методе нельзя вынести за метод,
 	//тк рендерятся карточки товаров внутри модального окна.
-	//возможно стоит сделать класс cardBascket? я как понимаю это не уменьшит код
-	render(bascket: IBascket) {
-		const orders = bascket.getOrdersList();
+	//возможно стоит сделать класс cardBasket? я как понимаю это не уменьшит код
+	render(basket: IBasket) {
+		const orders = basket.getOrdersList();
 		this._ordersList.innerHTML = '';
 		for (let i = 0; i < orders.length; i++) {
 			const product = orders[i];
@@ -193,7 +193,7 @@ export class ModalBasket extends Modal {
 		}
 		this._basketTemplate.querySelector(
 			'.basket__price'
-		).textContent = `${bascket.countTotalprice().toString()} синапсисов`;
+		).textContent = `${basket.countTotalprice().toString()} синапсисов`;
 		return this;
 	}
 
@@ -203,37 +203,12 @@ export class ModalBasket extends Modal {
 		return this;
 	}
 
-	close() {
-		super.close();
-		this._checkoutOrderButton.removeEventListener(
-			'click',
-			this.checkoutHandler
-		);
-		const removeProductButtons = this._basketTemplate.querySelectorAll(
-			'.basket__item-delete'
-		);
-		removeProductButtons.forEach((button: HTMLButtonElement) => {
-			if (button) {
-				// Получаем индекс продукта из dataset кнопки
-				const index = button.dataset.index;
-				// Получаем продукт по индексу
-				const product = bascket.getOrdersList()[parseInt(index)];
-				// Удаляем обработчик события
-				button.removeEventListener(
-					'click',
-					this.removeProductHandler.bind(this, product)
-				);
-			}
-		});
-		return this;
-	}
-
 	//если в козине нет товаров кнопка должна быть не активна
-	validateBascket(bascket: IBascket) {
+	validateBasket(basket: IBasket) {
 		//условие - корзина не пуста
-		const noItemsBuscket = bascket.getOrdersList().length === 0
+		const noItemsBuscket = basket.getOrdersList().length === 0
 		//условие - в корзине есть товары имеющие стоимость 
-		const onlyNonValuebleItems = bascket.getOrdersList().every((product) => {
+		const onlyNonValuebleItems = basket.getOrdersList().every((product) => {
 			return product.getProduct().price === null;
 		})
 
@@ -253,6 +228,25 @@ export class ModalBasket extends Modal {
 		return this;
 	}
 }
+
+//комментарий ревьюера:
+
+//Пожалуйста, посмотрите учебный проект Оно тебе надо. 
+//Там уже все готово. Вам нужно просто проанализировать то, 
+//что там описано, и лишнее удалить. Классы почти все одинаковые, 
+//как и их типизация. Внимательно посмотрите еще раз на тот проект
+//Очень сложно проверять Вашу работу. Слишком многое нужно исправлять, 
+//а это невозможно сделать быстро... 
+//Очень много поисков элементов в коде, что является очень плохой практикой в ООП
+
+//ответ
+
+//в инструкции к проекту рекомендовалось написать код самостоятельно,
+//не копируя из "оно тебе надо", что я и постарался сделать. 
+//лишние поиски элементов я удалил, если правильно понял.
+//после сдачи этой работы займусь "оно тебе надо"
+//при первом подходе к нему было мало что понятно, сейчас смогу разобраться 
+
 
 //модальное окно ввода адреса
 export class AddressModal extends Modal {
@@ -278,22 +272,6 @@ export class AddressModal extends Modal {
 		return this;
 	}
 
-	close() {
-		// Удаление слушателей событий из формы адреса при закрытии модального окна
-		this._adressForm.buttonsAlt.forEach((button) => {
-			button.removeEventListener(
-				'click',
-				this._adressForm.buttonAltHandler.bind(this)
-			);
-		});
-		this._adressForm
-			.getSubmitButton()
-			.removeEventListener('click', (event) =>
-				this._adressForm.submitHandler(event, order)
-			);
-		super.close();
-		return this;
-	}
 }
 
 //модальное окно ввода контактов
@@ -307,38 +285,13 @@ export class ModalContacts extends Modal {
 		this._form = new FormContacts(
 			this._modalContent.querySelector('.form') as HTMLFormElement,
 			order,
-			bascket
+			basket
 		);
 	}
 
 	open() {
 		super.open();
 		this._contentContainer.append(this._modalContent);
-		return this;
-	}
-
-	//при закрытии удаляем слушатели как окна так и формы
-	close(): this {
-		super.close();
-		if (this._form.emailInput) {
-			this._form.emailInput.removeEventListener(
-				'input',
-				this._form.emeilInputHandler.bind(this._form)
-			);
-		}
-		if (this._form.phoneInput) {
-			this._form.phoneInput.removeEventListener(
-				'input',
-				this._form.phoneInputHandler.bind(this._form)
-			);
-		}
-		if (this._form.submitButton) {
-			this._form.submitButton.removeEventListener(
-				'click',
-				(event: MouseEvent) => this._form.submitHandler(event, order, bascket)
-			);
-		}
-
 		return this;
 	}
 }
@@ -374,14 +327,6 @@ export class FinalModal extends Modal {
 	open() {
 		super.open();
 		this._contentContainer.append(this._modalContent);
-		return this;
-	}
-
-	close(): this {
-		super.close();
-		this._finalButton.removeEventListener('click', () => {
-			this.close();
-		});
 		return this;
 	}
 }
