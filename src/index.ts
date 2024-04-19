@@ -15,9 +15,13 @@ import {
 
 // Кэширование элементов DOM
 export const bascketButton = document.querySelector('.header__basket');
-export const bascketCounter = bascketButton.querySelector('.header__basket-counter');
+export const bascketCounter = bascketButton.querySelector(
+	'.header__basket-counter'
+);
 export const gallery = document.querySelector('.gallery') as HTMLElement;
-export const modalContainer = document.querySelector('#modal-container') as HTMLElement;
+export const modalContainer = document.querySelector(
+	'#modal-container'
+) as HTMLElement;
 
 // Инициализация объектов
 export const api = new Api(API_URL);
@@ -25,12 +29,28 @@ export const eventEmitter = new EventEmitter();
 export const bascket = new Bascket();
 export const order = new Order();
 
-//получаем список продуктов 
+//тимплейты
+const cardPreviewTemplate = document.querySelector(
+	'#card-preview'
+) as HTMLTemplateElement;
+const bascketTemplate = document.querySelector(
+	'#basket'
+) as HTMLTemplateElement;
+const cardBascketTemplate = document.querySelector(
+	'#card-basket'
+) as HTMLTemplateElement;
+const addressTemplate = document.querySelector('#order') as HTMLTemplateElement;
+const contactsTemplate = document.querySelector(
+	'#contacts'
+) as HTMLTemplateElement;
+const finalTemplate = document.querySelector('#success') as HTMLTemplateElement;
+
+//получаем список продуктов
 api
 	.get('/product')
 	.then((response: ProductListResponse) => {
 		const productList = new ProductsListModel(response.items);
-		console.log(productList)
+		console.log(productList);
 		productList.getProductList().forEach((product: IProductModel) => {
 			const cardTemplate = new CardTemplate();
 			const template = cardTemplate.getTemplate('card-catalog');
@@ -40,38 +60,26 @@ api
 	})
 	.catch((error: any) => {
 		console.error('Error:', error);
-		console.log('не работает ларёк, потому что Рагнарёк')
+		console.log('не работает ларёк, потому что Рагнарёк');
 	});
 
 //открытие модального окна продукта
 eventEmitter.on('productModal:open', (data: { product: IProductModel }) => {
-	const contentTemplate = document.querySelector(
-		'#card-preview'
-	) as HTMLTemplateElement;
-	const content = contentTemplate.content.cloneNode(true) as HTMLElement;
-
+	const content = cardPreviewTemplate.content.cloneNode(true) as HTMLElement;
 	const modalProduct = new ModalProduct(modalContainer, content, data.product);
 	modalProduct.render().controlButton().open();
 });
 
 //открытие модального окна корзины
 eventEmitter.on('bascketModal:open', () => {
-	const bascketTemplate = document.querySelector(
-		'#basket'
-	) as HTMLTemplateElement;
 	const bascketContentTemplate = bascketTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
-	const cardBascketTemplate = document.querySelector(
-		'#card-basket'
-	) as HTMLTemplateElement;
-
 	const modalBascket = new ModalBasket(
 		modalContainer,
 		bascketContentTemplate,
 		cardBascketTemplate
 	);
-
 	modalBascket.render(bascket).validateBascket(bascket).open();
 });
 
@@ -81,16 +89,9 @@ eventEmitter.on('bascket:changed', () => {
 	bascketCounter.textContent = currentNumber.toString();
 	const bascketContent = modalContainer.querySelector('.modal_active .basket');
 	if (bascketContent) {
-		const bascketTemplate = document.querySelector(
-			'#basket'
-		) as HTMLTemplateElement;
 		const bascketContentTemplate = bascketTemplate.content.cloneNode(
 			true
 		) as HTMLElement;
-		const cardBascketTemplate = document.querySelector(
-			'#card-basket'
-		) as HTMLTemplateElement;
-
 		const modalBascket = new ModalBasket(
 			modalContainer,
 			bascketContentTemplate,
@@ -107,21 +108,19 @@ bascketButton.addEventListener('click', () => {
 
 //переход от коризны к оформлению заказа
 eventEmitter.on('bascket:checkout', () => {
-	const addressTemplate = document.querySelector(
-		'#order'
-	) as HTMLTemplateElement;
 	const addressTemplateContent = addressTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
-	const addressModal = new AddressModal(modalContainer, addressTemplateContent, order);
+	const addressModal = new AddressModal(
+		modalContainer,
+		addressTemplateContent,
+		order
+	);
 	addressModal.open();
 });
 
 //открытие модального окна заполнения контактов
 eventEmitter.on('modalContacts:open', () => {
-	const contactsTemplate = document.querySelector(
-		'#contacts'
-	) as HTMLTemplateElement;
 	const contactsTemplateContent = contactsTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
@@ -135,9 +134,6 @@ eventEmitter.on('modalContacts:open', () => {
 
 //открытие модального окна завершения заказа
 eventEmitter.on('finalModal:open', () => {
-	const finalTemplate = document.querySelector(
-		'#success'
-	) as HTMLTemplateElement;
 	const finalTemplateContent = finalTemplate.content.cloneNode(
 		true
 	) as HTMLElement;
@@ -151,11 +147,11 @@ const postOrder = (order: IOrder, api: IApi) => {
 		.then((response: { id: string; total: number }) => {
 			// Обработка успешного ответа
 			console.log('Order created successfully:', response);
-			eventEmitter.emit('finalModal:open')
+			eventEmitter.emit('finalModal:open');
 		})
 		.catch((error: any) => {
 			console.error('Error creating order:', error);
 		});
-}
+};
 
-eventEmitter.on('order:send', () => postOrder(order, api))
+eventEmitter.on('order:send', () => postOrder(order, api));
