@@ -4,16 +4,15 @@ import { Component } from './component';
 
 //базовый код формы
 export class Form extends Component<IForm> {
-	protected _form: HTMLFormElement | null;
+	protected _form: HTMLElement;
 	protected _submitButton: HTMLButtonElement;
 	protected _inputs: HTMLInputElement[];
 	valid: boolean = false;
 
-	constructor(form: HTMLFormElement) {
+	constructor(form: HTMLElement) {
 		super()
 		this._form = form;
 		this._inputs = ensureAllElements<HTMLInputElement>('.form__input', this._form)
-
 		this._submitButton = ensureElement<HTMLButtonElement>('.button[type="submit"]', this._form)
 
 		this._form.addEventListener('input', () => {
@@ -27,7 +26,7 @@ export class Form extends Component<IForm> {
 
 	validate() {
 		if (
-			Array.from(this._inputs).every((input: HTMLInputElement) => {
+			this._inputs.every((input: HTMLInputElement) => {
 				return input.validity.valid;
 			})
 		) {

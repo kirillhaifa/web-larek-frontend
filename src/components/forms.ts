@@ -9,7 +9,7 @@ export class FormAdress extends Form implements IFormAddress {
 	protected _errorMessage: HTMLElement;
 	buttonsAlt: HTMLButtonElement[];
 
-	constructor(form: HTMLFormElement, order: IOrder) {
+	constructor(form: HTMLElement, order: IOrder) {
 		super(form);
 
 		this._errorMessage = ensureElement<HTMLElement>(

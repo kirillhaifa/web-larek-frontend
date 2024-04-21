@@ -278,11 +278,7 @@ export class AddressModal extends Modal {
 	) {
 		super(template);
 		this._addressTemplate = addressTemplate;
-		const formElement = ensureElement<HTMLFormElement>(
-			'form[name="order"]',
-			this._addressTemplate
-		);
-		this._adressForm = new FormAdress(formElement, order);
+		this._adressForm = new FormAdress(this._addressTemplate, order);
 	}
 
 	open() {
@@ -300,8 +296,9 @@ export class ModalContacts extends Modal {
 	constructor(template: HTMLElement, content: HTMLElement, order: IOrder) {
 		super(template);
 		this._modalContent = content;
+		const form = this._modalContent as HTMLFormElement
 		this._form = new FormContacts(
-			ensureElement<HTMLFormElement>('.form', this._modalContent),
+			form,
 			order,
 			basket
 		);
