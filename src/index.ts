@@ -12,13 +12,12 @@ import {
 	ModalContacts,
 	FinalModal,
 } from './components/modals';
+import { ensureElement, setText } from './utils/utils';
 
 // Кэширование элементов DOM
-export const basketButton = document.querySelector('.header__basket');
-export const basketCounter = basketButton.querySelector(
-	'.header__basket-counter'
-);
-export const gallery = document.querySelector('.gallery') as HTMLElement;
+export const basketButton = ensureElement<HTMLButtonElement>('.header__basket')
+export const basketCounter = ensureElement<HTMLElement>('.header__basket-counter', basketButton)
+export const gallery = ensureElement<HTMLElement>('.gallery')
 export const modalContainer = document.querySelector(
 	'#modal-container'
 ) as HTMLElement;
@@ -87,7 +86,10 @@ eventEmitter.on('basketModal:open', () => {
 //обработка изменений в коризне
 eventEmitter.on('basket:changed', () => {
 	const currentNumber = basket.countAmmount();
-	basketCounter.textContent = currentNumber.toString();
+
+	//eventEmmiter не наследует классу Component, использовать этот метод тут не получается.
+	//я допольнительно вынес setText в utils
+	setText(basketCounter, currentNumber.toString())  
 	const basketContent = modalContainer.querySelector('.modal_active .basket');
 	if (basketContent) {
 		const basketContentTemplate = basketTemplate.content.cloneNode(

@@ -152,4 +152,10 @@ export function createElement<T extends HTMLElement>(
 	return element;
 }
 
+export function setText (element: HTMLElement, value: unknown) {
+	if (element) {
+			element.textContent = String(value);
+	}
+}
+
 

@@ -9,7 +9,7 @@ export class Form extends Component<IForm> {
 	valid: boolean = false;
 
 	constructor(form: HTMLFormElement) {
-		super();
+		super()
 		this._form = form;
 		this._inputs = this._form.querySelectorAll('.form__input');
 

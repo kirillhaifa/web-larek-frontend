@@ -1,4 +1,5 @@
-// Хорошая практика даже простые типы выносить в алиасы
+import { Component } from "./component";
+
 // Зато когда захотите поменять это достаточно сделать в одном месте
 type EventName = string | RegExp;
 type Subscriber = Function;
@@ -18,10 +19,11 @@ export interface IEvents {
  * В расширенных вариантах есть возможность подписаться на все события
  * или слушать события по шаблону например
  */
-export class EventEmitter implements IEvents {
+export class EventEmitter extends Component<IEvents> { // 
     _events: Map<EventName, Set<Subscriber>>;
 
     constructor() {
+        super()
         this._events = new Map<EventName, Set<Subscriber>>();
     }
 

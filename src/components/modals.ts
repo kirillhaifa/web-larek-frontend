@@ -207,8 +207,8 @@ export class ModalBasket extends Modal {
 	validateBasket(basket: IBasket) {
 		//условие - корзина не пуста
 		const noItemsBuscket = basket.getOrdersList().length === 0
-		//условие - в корзине есть товары имеющие стоимость 
-		const onlyNonValuebleItems = basket.getOrdersList().every((product) => {
+		//условие - в корзине только товары имеющие стоимость 
+		const hasNonValuebleItems = basket.getOrdersList().some((product) => {
 			return product.getProduct().price === null;
 		})
 
@@ -216,11 +216,11 @@ export class ModalBasket extends Modal {
 			//коризна пуста - кнопка "оформить", но не активна
 			this.setDisabled(this._checkoutOrderButton, noItemsBuscket);
 			this.setText(this._checkoutOrderButton, 'Оформить');
-		} else if (onlyNonValuebleItems) { 
+		} else if (hasNonValuebleItems) { 
 			//корзина не пуста - кнопка нельзя купить, неактивна
-			this.setDisabled(this._checkoutOrderButton, onlyNonValuebleItems);
+			this.setDisabled(this._checkoutOrderButton, hasNonValuebleItems);
 			this.setText(this._checkoutOrderButton, 'Нельзя купить');
-		} else if (!noItemsBuscket && !onlyNonValuebleItems) { 
+		} else if (!noItemsBuscket && !hasNonValuebleItems) { 
 			//коризна не пуста и есть товары с ценой - кнопка "оформить активна",
 			this.setText(this._checkoutOrderButton, 'Оформить');
 		}
