@@ -76,7 +76,7 @@ export interface IForm {
 
 //типизация формы адреса
 export interface IFormAddress extends IForm {
-  buttonsAlt: NodeListOf<HTMLButtonElement>;
+  buttonsAlt: HTMLButtonElement[];
 
   buttonAltHandler(): void;
   submitHandler(event: MouseEvent, order: IOrder): void;

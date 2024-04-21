@@ -1,19 +1,21 @@
-import { ensureElement } from "../../utils/utils";
-import { IModal } from "../../types";
-import { Component } from "./component";
+import { ensureElement } from '../../utils/utils';
+import { IModal } from '../../types';
+import { Component } from './component';
 
 //базовый класс модального окна
-export class Modal extends Component <IModal> {
+export class Modal extends Component<IModal> {
 	protected _closeButton: HTMLButtonElement;
 	protected _content: HTMLElement;
 	protected _modalTemplate: HTMLElement;
 	protected _contentContainer: HTMLElement;
 
 	constructor(template: HTMLElement) {
-		super()
+		super();
 		this._modalTemplate = template;
-		this._contentContainer =
-			this._modalTemplate.querySelector('.modal__content');
+		this._contentContainer = ensureElement<HTMLElement>(
+			'.modal__content',
+			this._modalTemplate
+		);
 		this._closeButton = ensureElement<HTMLButtonElement>(
 			'.modal__close',
 			this._modalTemplate

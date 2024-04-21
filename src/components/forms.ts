@@ -1,25 +1,32 @@
 import { basket, eventEmitter } from '..';
 import { IBasket, IOrder, IFormAddress, IFormContacts, IApi } from '../types';
+import { ensureAllElements, ensureElement } from '../utils/utils';
 import { Form } from './base/form';
 
 //форма адреса и способа оплаты
 export class FormAdress extends Form implements IFormAddress {
 	protected _adressInput: HTMLInputElement;
 	protected _errorMessage: HTMLElement;
-	buttonsAlt: NodeListOf<HTMLButtonElement>;
+	buttonsAlt: HTMLButtonElement[];
 
 	constructor(form: HTMLFormElement, order: IOrder) {
 		super(form);
 
-		this._errorMessage = this._form.querySelector('.form__errors');
-		this.buttonsAlt = this._form.querySelectorAll(
-			'.button_alt'
-		) as NodeListOf<HTMLButtonElement>;
-		this.behaveLikeRadioButtons(this.buttonsAlt);
+		this._errorMessage = ensureElement<HTMLElement>(
+			'.form__errors',
+			this._form
+		);
 
-		this._adressInput = this._form.querySelector(
-			'.form__input'
-		) as HTMLInputElement;
+		this.buttonsAlt = ensureAllElements<HTMLButtonElement>(
+			'.button_alt',
+			this._form
+		);
+		this.behaveLikeRadioButtons(this.buttonsAlt);
+		this._adressInput = ensureElement<HTMLInputElement>(
+			'.form__input',
+			this._form
+		);
+
 		this.buttonsAlt.forEach((button) => {
 			button.addEventListener('click', this.buttonAltHandler.bind(this));
 		});
@@ -44,10 +51,8 @@ export class FormAdress extends Form implements IFormAddress {
 	//кнопки вsбора способа оплаты сделаны не радиокнопками, а обычными кнопками.
 	//фунция заставляет их вести себя как радиокнопки,
 	//но при первой загрузке ни одна из них не выбрана
-	private behaveLikeRadioButtons(buttons: NodeListOf<HTMLButtonElement>): void {
-		const checkNoChoosen = (
-			buttons: NodeListOf<HTMLButtonElement> | null
-		): boolean => {
+	private behaveLikeRadioButtons(buttons: HTMLButtonElement[]): void {
+		const checkNoChoosen = (buttons: HTMLButtonElement[] | null): boolean => {
 			return !Array.from(buttons).some((button) =>
 				button.classList.contains('button_alt-active')
 			);
@@ -67,9 +72,7 @@ export class FormAdress extends Form implements IFormAddress {
 	}
 
 	//возращает способ оплаты, берет его из кнопок
-	private returnChoosenValue(
-		buttons: NodeListOf<HTMLButtonElement>
-	): string | null {
+	private returnChoosenValue(buttons: HTMLButtonElement[]): string | null {
 		let choosenOption: string = '';
 
 		buttons.forEach((button) => {
@@ -104,28 +107,28 @@ export class FormContacts extends Form implements IFormContacts {
 	emailInput: HTMLInputElement;
 	phoneInput: HTMLInputElement;
 	submitButton: HTMLButtonElement;
-	protected _errorMessage: HTMLElement
+	protected _errorMessage: HTMLElement;
 
 	constructor(form: HTMLFormElement, order: IOrder, basket: IBasket) {
 		super(form);
-		this.emailInput = this._form.querySelector(
-			'input[name="email"]'
-		) as HTMLInputElement;
+		this.emailInput = ensureElement<HTMLInputElement>(
+			'input[name="email"]',
+			this._form
+		);
 		this.emailInput.addEventListener(
 			'input',
 			this.emeilInputHandler.bind(this)
 		);
 
-		this.phoneInput = this._form.querySelector(
-			'input[name="phone"]'
-		) as HTMLInputElement;
+		this.phoneInput = ensureElement<HTMLInputElement>(
+			'input[name="phone"]',
+			this._form
+		);
 		this.phoneInput.addEventListener(
 			'input',
 			this.phoneInputHandler.bind(this)
 		);
-
-		this._errorMessage = this._form.querySelector('.form__errors');
-
+		this._errorMessage = ensureElement<HTMLElement>('.form__errors', this._form)
 		this._submitButton.addEventListener('click', (event) =>
 			this.submitHandler(event, order, basket)
 		);
@@ -143,13 +146,13 @@ export class FormContacts extends Form implements IFormContacts {
 		this.validate().renderError().controlSubmitButton();
 	}
 
-	//при этом происходит сразу много всего, очистка корзины, api/post, 
+	//при этом происходит сразу много всего, очистка корзины, api/post,
 	submitHandler(event: MouseEvent, order: IOrder, basket: IBasket) {
 		event.preventDefault();
 		order.setLastOrderPrice(basket.countTotalprice());
 		order.setEmail(this.emailInput.value);
 		order.setPhoneNumber(this.phoneInput.value);
-		console.log(order)
+		console.log(order);
 		eventEmitter.emit('order:send');
 	}
 
@@ -171,7 +174,7 @@ export class FormContacts extends Form implements IFormContacts {
 				break;
 		}
 
-		this.setText(this._errorMessage, message)
+		this.setText(this._errorMessage, message);
 		return this;
 	}
 }

@@ -12,15 +12,16 @@ import {
 	ModalContacts,
 	FinalModal,
 } from './components/modals';
-import { ensureElement, setText } from './utils/utils';
+import { cloneTemplate, ensureElement, setText } from './utils/utils';
 
 // Кэширование элементов DOM
-export const basketButton = ensureElement<HTMLButtonElement>('.header__basket')
-export const basketCounter = ensureElement<HTMLElement>('.header__basket-counter', basketButton)
-export const gallery = ensureElement<HTMLElement>('.gallery')
-export const modalContainer = document.querySelector(
-	'#modal-container'
-) as HTMLElement;
+export const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
+export const basketCounter = ensureElement<HTMLElement>(
+	'.header__basket-counter',
+	basketButton
+);
+export const gallery = ensureElement<HTMLElement>('.gallery');
+export const modalContainer = ensureElement<HTMLElement>('#modal-container');
 
 // Инициализация объектов
 export const api = new Api(API_URL);
@@ -29,20 +30,13 @@ export const basket = new Basket();
 export const order = new Order();
 
 //тимплейты
-const cardPreviewTemplate = document.querySelector(
-	'#card-preview'
-) as HTMLTemplateElement;
-const basketTemplate = document.querySelector(
-	'#basket'
-) as HTMLTemplateElement;
-const cardBasketTemplate = document.querySelector(
-	'#card-basket'
-) as HTMLTemplateElement;
-const addressTemplate = document.querySelector('#order') as HTMLTemplateElement;
-const contactsTemplate = document.querySelector(
-	'#contacts'
-) as HTMLTemplateElement;
-const finalTemplate = document.querySelector('#success') as HTMLTemplateElement;
+
+const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
+const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+const addressTemplate = ensureElement<HTMLTemplateElement>('#order');
+const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
+const finalTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 //получаем список продуктов
 api
@@ -64,17 +58,14 @@ api
 
 //открытие модального окна продукта
 eventEmitter.on('productModal:open', (data: { product: IProductModel }) => {
-	const content = cardPreviewTemplate.content.cloneNode(true) as HTMLElement;
-	// Получаем единственный экземпляр модального окна продукта
+	const content = cloneTemplate(cardPreviewTemplate)
 	const modalProduct = new ModalProduct(modalContainer, content, data.product);
 	modalProduct.render().controlButton().open();
 });
 
 //открытие модального окна корзины
 eventEmitter.on('basketModal:open', () => {
-	const basketContentTemplate = basketTemplate.content.cloneNode(
-		true
-	) as HTMLElement;
+	const basketContentTemplate = cloneTemplate(basketTemplate)
 	const modalBasket = new ModalBasket(
 		modalContainer,
 		basketContentTemplate,
@@ -89,12 +80,12 @@ eventEmitter.on('basket:changed', () => {
 
 	//eventEmmiter не наследует классу Component, использовать этот метод тут не получается.
 	//я допольнительно вынес setText в utils
-	setText(basketCounter, currentNumber.toString())  
-	const basketContent = modalContainer.querySelector('.modal_active .basket');
+	setText(basketCounter, currentNumber.toString());
+	//ensureElement не ищет по двум css классам, тут оставаил querySelector
+	const basketContent = modalContainer.querySelector('.modal_active .basket'); 
 	if (basketContent) {
-		const basketContentTemplate = basketTemplate.content.cloneNode(
-			true
-		) as HTMLElement;
+		
+		const basketContentTemplate = cloneTemplate(basketTemplate)
 		const modalBasket = new ModalBasket(
 			modalContainer,
 			basketContentTemplate,
@@ -111,9 +102,7 @@ basketButton.addEventListener('click', () => {
 
 //переход от коризны к оформлению заказа
 eventEmitter.on('basket:checkout', () => {
-	const addressTemplateContent = addressTemplate.content.cloneNode(
-		true
-	) as HTMLElement;
+	const addressTemplateContent = cloneTemplate(addressTemplate)
 	const addressModal = new AddressModal(
 		modalContainer,
 		addressTemplateContent,
@@ -124,9 +113,8 @@ eventEmitter.on('basket:checkout', () => {
 
 //открытие модального окна заполнения контактов
 eventEmitter.on('modalContacts:open', () => {
-	const contactsTemplateContent = contactsTemplate.content.cloneNode(
-		true
-	) as HTMLElement;
+	const contactsTemplateContent = cloneTemplate(contactsTemplate)
+
 	const modalContacts = new ModalContacts(
 		modalContainer,
 		contactsTemplateContent,
@@ -135,13 +123,10 @@ eventEmitter.on('modalContacts:open', () => {
 	modalContacts.open();
 });
 
-
 //открытие модального окна завершения заказа
 eventEmitter.on('finalModal:open', () => {
-	const finalTemplateContent = finalTemplate.content.cloneNode(
-		true
-	) as HTMLElement;
-	const finalModal = new FinalModal(modalContainer, finalTemplateContent);	
+	const finalTemplateContent = cloneTemplate(finalTemplate)
+	const finalModal = new FinalModal(modalContainer, finalTemplateContent);
 	finalModal.render().open();
 });
 
@@ -151,13 +136,12 @@ const postOrder = (order: IOrder, api: IApi) => {
 		.then((response: { id: string; total: number }) => {
 			// Обработка успешного ответа
 			console.log('Order created successfully:', response);
-			//открываем финальное модальное окно только если сработал api 
-			
+			//открываем финальное модальное окно только если сработал api
+
 			eventEmitter.emit('finalModal:open');
 			basket.removeAllProducts();
 			eventEmitter.emit('basket:changed');
-			order.clean()
-
+			order.clean();
 		})
 		.catch((error: any) => {
 			console.error('Error creating order:', error);

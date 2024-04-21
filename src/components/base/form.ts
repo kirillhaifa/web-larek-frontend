@@ -1,21 +1,20 @@
 import { IForm } from '../../types';
+import { ensureAllElements, ensureElement } from '../../utils/utils';
 import { Component } from './component';
 
 //базовый код формы
 export class Form extends Component<IForm> {
 	protected _form: HTMLFormElement | null;
 	protected _submitButton: HTMLButtonElement;
-	protected _inputs: NodeListOf<HTMLInputElement>;
+	protected _inputs: HTMLInputElement[];
 	valid: boolean = false;
 
 	constructor(form: HTMLFormElement) {
 		super()
 		this._form = form;
-		this._inputs = this._form.querySelectorAll('.form__input');
+		this._inputs = ensureAllElements<HTMLInputElement>('.form__input', this._form)
 
-		this._submitButton = this._form.querySelector(
-			'.button[type="submit"]'
-		) as HTMLButtonElement;
+		this._submitButton = ensureElement<HTMLButtonElement>('.button[type="submit"]', this._form)
 
 		this._form.addEventListener('input', () => {
 			this.validate().controlSubmitButton();
