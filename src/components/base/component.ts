@@ -3,9 +3,8 @@
  */
 export abstract class Component<T> {
   // Инструментарий для работы с DOM в дочерних компонентах
-  //protected constructor(protected readonly container: HTMLElement) {
-    // Учитывайте что код в конструкторе исполняется ДО всех объявлений в дочернем классе
-  //}
+
+  //Преподаватель (Сергеем Криворучко) после обсуждения сказал, что это замечание снято
 
   // Переключить класс
   toggleClass(element: HTMLElement, className: string, force?: boolean) {
@@ -47,11 +46,7 @@ export abstract class Component<T> {
       }
   }
 
-  // Вернуть корневой DOM-элемент
-  //render(data?: Partial<T>): HTMLElement {
-  //Object.assign(this as object, data ?? {});
-  //return this.container;
-  //}
+    //Преподаватель (Сергеем Криворучко) после обсуждения сказал, что это замечание снято
 
 }
 

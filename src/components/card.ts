@@ -4,26 +4,12 @@ import { eventEmitter } from '../index';
 import { Component } from './base/component';
 import { ensureElement } from '../utils/utils';
 
-// Поиск и копирование тимплейта карточки
-export class CardTemplate implements ICardTemplate {
-	getTemplate(templateId: string): HTMLElement {
-		const templateElement = document.querySelector(
-			'#' + templateId
-		) as HTMLTemplateElement | null;
-
-		return templateElement
-			? (templateElement.content.cloneNode(true) as HTMLElement)
-			: document.createElement('div');
-	}
-}
-
 // Рендеринг карточки товара
 
 //класс переделан, элементы находятся в контрукторе а не в методе.
 
 export class ProductCard extends Component<IProductCard> {
 	protected _card: HTMLElement;
-	protected _cardTemplate: HTMLElement;
 	protected _product: IProductModel;
 	protected _category: HTMLElement;
 	protected _title: HTMLElement;
@@ -33,16 +19,11 @@ export class ProductCard extends Component<IProductCard> {
 	constructor(product: IProductModel, cardTemplate: HTMLElement) {
 		super();
 		this._product = product;
-
-		this._cardTemplate = cardTemplate.cloneNode(true) as HTMLElement;
-
-		this._card = ensureElement<HTMLElement>('.card', this._cardTemplate);
+		this._card = cardTemplate;
 		this._category = ensureElement<HTMLElement>('.card__category', this._card);
 		this._title = ensureElement<HTMLElement>('.card__title', this._card);
 		this._price = ensureElement<HTMLElement>('.card__price', this._card);
 		this._image = ensureElement<HTMLImageElement>('.card__image', this._card);
-
-
 
 		this._card.addEventListener('click', () => {
 			eventEmitter.emit('productModal:open', { product: this._product });

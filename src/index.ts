@@ -2,7 +2,7 @@ import './scss/styles.scss';
 import { Api } from './components/base/api';
 import { API_URL } from './utils/constants';
 import { ProductListResponse, IProductModel, IOrder, IApi } from './types';
-import { CardTemplate, ProductCard } from './components/card';
+import { ProductCard } from './components/card';
 import { Basket, ProductsListModel, Order } from './components/model';
 import { EventEmitter } from './components/base/events';
 import {
@@ -37,6 +37,7 @@ const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
 const addressTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const finalTemplate = ensureElement<HTMLTemplateElement>('#success');
+const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog')
 
 //получаем список продуктов
 api
@@ -45,8 +46,7 @@ api
 		const productList = new ProductsListModel(response.items);
 		console.log(productList);
 		productList.getProductList().forEach((product: IProductModel) => {
-			const cardTemplate = new CardTemplate();
-			const template = cardTemplate.getTemplate('card-catalog');
+			const template = cloneTemplate(cardCatalogTemplate)
 			const productCard = new ProductCard(product, template);
 			productCard.renderCard(gallery);
 		});
@@ -77,14 +77,20 @@ eventEmitter.on('basketModal:open', () => {
 //обработка изменений в коризне
 eventEmitter.on('basket:changed', () => {
 	const currentNumber = basket.countAmmount();
-
 	//eventEmmiter не наследует классу Component, использовать этот метод тут не получается.
 	//я допольнительно вынес setText в utils
 	setText(basketCounter, currentNumber.toString());
+
+	//проверяем отырто ли модальное окно корзины, если да
+	//перерисовываем содержимое 
+
+	//это проверка открыто ли модальное окно, оно происходит вне класса
+	//единственный способ убрать этот querySelector который я вижу, сделать 
+	//глобальную константу ввиде булевого значения и менять ее при открытии и закрытии окна
+
 	//ensureElement не ищет по двум css классам, тут оставаил querySelector
 	const basketContent = modalContainer.querySelector('.modal_active .basket'); 
 	if (basketContent) {
-		
 		const basketContentTemplate = cloneTemplate(basketTemplate)
 		const modalBasket = new ModalBasket(
 			modalContainer,

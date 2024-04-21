@@ -11,12 +11,10 @@ export class FormAdress extends Form implements IFormAddress {
 
 	constructor(form: HTMLElement, order: IOrder) {
 		super(form);
-
 		this._errorMessage = ensureElement<HTMLElement>(
 			'.form__errors',
 			this._form
 		);
-
 		this.buttonsAlt = ensureAllElements<HTMLButtonElement>(
 			'.button_alt',
 			this._form
@@ -26,11 +24,9 @@ export class FormAdress extends Form implements IFormAddress {
 			'.form__input',
 			this._form
 		);
-
 		this.buttonsAlt.forEach((button) => {
 			button.addEventListener('click', this.buttonAltHandler.bind(this));
 		});
-
 		this._submitButton.addEventListener('click', (event) =>
 			this.submitHandler(event, order)
 		);
@@ -61,10 +57,12 @@ export class FormAdress extends Form implements IFormAddress {
 		buttons.forEach((button: HTMLButtonElement) => {
 			button.addEventListener('click', () => {
 				if (checkNoChoosen(buttons)) {
-					button.classList.add('button_alt-active');
+					//если опция не выбрана - переключаем класс только у одной кнопки
+					this.toggleClass(button, 'button_alt-active');
 				} else {
+					//если опция выбрана - переключаем класс у обеих
 					buttons.forEach((button: HTMLButtonElement) => {
-						button.classList.toggle('button_alt-active');
+						this.toggleClass(button, 'button_alt-active');
 					});
 				}
 			});
@@ -80,23 +78,38 @@ export class FormAdress extends Form implements IFormAddress {
 				choosenOption = button.innerText.trim();
 			}
 		});
+
 		return choosenOption;
 	}
 
 	//переопределяем валидацию из-за необходимости выбора метода оплаты
+	//метод переработан, добавлены вариации сообщений 
 	validate() {
-		if (
-			this._adressInput.validity.valid &&
-			this.returnChoosenValue(this.buttonsAlt) // должна быть нажата кнопка
-		) {
-			this.setText(this._errorMessage, '');
-			this.valid = true;
-		} else {
-			this.setText(
-				this._errorMessage,
-				'Введите адрес и выберите способ оплаты'
-			);
-			this.valid = false;
+		switch (true) {
+			case !this._adressInput.validity.valid &&
+				!this.returnChoosenValue(this.buttonsAlt):
+				this.setText(
+					this._errorMessage,
+					'Введите корректный адрес и выберите способ оплаты'
+				);
+				this.valid = false;
+				break;
+			case !this._adressInput.validity.valid &&
+				this.returnChoosenValue(this.buttonsAlt).length !== 0:
+				this.setText(this._errorMessage, 'Введите корректный адрес');
+				this.valid = false;
+				break;
+			case this._adressInput.validity.valid &&
+				!this.returnChoosenValue(this.buttonsAlt):
+				this.setText(this._errorMessage, 'Выберите способ оплаты');
+				this.valid = false;
+				break;
+			case this._adressInput.validity.valid &&
+				this.returnChoosenValue(this.buttonsAlt) &&
+				this.returnChoosenValue(this.buttonsAlt).length !== 0:
+				this.setText(this._errorMessage, '');
+				this.valid = true;
+				break;
 		}
 		return this;
 	}
@@ -128,7 +141,10 @@ export class FormContacts extends Form implements IFormContacts {
 			'input',
 			this.phoneInputHandler.bind(this)
 		);
-		this._errorMessage = ensureElement<HTMLElement>('.form__errors', this._form)
+		this._errorMessage = ensureElement<HTMLElement>(
+			'.form__errors',
+			this._form
+		);
 		this._submitButton.addEventListener('click', (event) =>
 			this.submitHandler(event, order, basket)
 		);

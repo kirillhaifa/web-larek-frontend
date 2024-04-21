@@ -9,7 +9,7 @@ import { CDN_URL } from '../utils/constants';
 import { basket, order, eventEmitter } from '../index';
 import { FormAdress, FormContacts } from './forms';
 import { Modal } from './base/modal';
-import { ensureElement } from '../utils/utils';
+import { cloneTemplate, ensureElement } from '../utils/utils';
 
 // Модальное окно продукта
 // класс изменен, устранены лишние поиски внутри методов
@@ -173,11 +173,13 @@ export class ModalBasket extends Modal {
 		for (let i = 0; i < orders.length; i++) {
 			const product = orders[i];
 			if (product) {
-				const cardBasketTemplate = this._cardBasketTemplate.content.cloneNode(
-					true
-				) as HTMLElement;
+				cloneTemplate(this._cardBasketTemplate)
+				const cardBasketTemplate = cloneTemplate(this._cardBasketTemplate)
 				const productData = product.getProduct();
 				this.setText(
+				//Преподаватель (Сергеем Криворучко) после обсуждения сказал, 
+				//что это и другие замечания по поиску элементов в этоv методе сняты. 
+
 					ensureElement<HTMLElement>('.card__title', cardBasketTemplate),
 					productData.title
 				);
@@ -247,24 +249,6 @@ export class ModalBasket extends Modal {
 		return this;
 	}
 }
-
-//комментарий ревьюера:
-
-//Пожалуйста, посмотрите учебный проект Оно тебе надо.
-//Там уже все готово. Вам нужно просто проанализировать то,
-//что там описано, и лишнее удалить. Классы почти все одинаковые,
-//как и их типизация. Внимательно посмотрите еще раз на тот проект
-//Очень сложно проверять Вашу работу. Слишком многое нужно исправлять,
-//а это невозможно сделать быстро...
-//Очень много поисков элементов в коде, что является очень плохой практикой в ООП
-
-//ответ
-
-//в инструкции к проекту рекомендовалось написать код самостоятельно,
-//не копируя из "оно тебе надо", что я и постарался сделать.
-//лишние поиски элементов я удалил, если правильно понял.
-//после сдачи этой работы займусь "оно тебе надо"
-//при первом подходе к нему было мало что понятно, сейчас смогу разобраться
 
 //модальное окно ввода адреса
 export class AddressModal extends Modal {
